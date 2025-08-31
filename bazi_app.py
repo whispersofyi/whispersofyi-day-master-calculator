@@ -1,88 +1,72 @@
 # bazi_app.py
-
 import streamlit as st
-from datetime import datetime, timedelta
-import pytz
-
-# Attempt to import sxtwl
-try:
-    import sxtwl
-except ImportError:
-    sxtwl = None
+from datetime import date
+import sxtwl
 
 # -------------------------
-# BaZi Day Master Helpers
+# BaZi Calculation Helpers
 # -------------------------
+
 HEAVENLY_STEMS = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
 HEAVENLY_STEMS_EN = ["Jia","Yi","Bing","Ding","Wu","Ji","Geng","Xin","Ren","Gui"]
+ELEMENTS = ["Wood", "Wood", "Fire", "Fire", "Earth", "Earth", "Metal", "Metal", "Water", "Water"]
+YINYANG = ["Yang","Yin","Yang","Yin","Yang","Yin","Yang","Yin","Yang","Yin"]
 
-def get_day_master(year:int, month:int, day:int, hour:int, minute:int, tz_offset:float=0.0):
-    """
-    Calculate Day Master (Heavenly Stem of the Day) using sxtwl
-    tz_offset: numeric hours offset from UTC (e.g., 8 for Malaysia)
-    Returns: tuple (stem_char, stem_en)
-    """
-    if sxtwl is None:
-        raise RuntimeError("sxtwl library not installed. Please add `sxtwl` to requirements.txt and install.")
+EARTHLY_BRANCHES = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"]
+EARTHLY_BRANCHES_EN = ["Zi","Chou","Yin","Mao","Chen","Si","Wu","Wei","Shen","You","Xu","Hai"]
 
-    # Construct naive datetime, then adjust to UTC by subtracting offset
-    dt = datetime(year, month, day, hour, minute)
-    dt_utc = dt - timedelta(hours=tz_offset)
-
-    # Get lunar day object
-    lunar_day = sxtwl.fromSolar(dt_utc.year, dt_utc.month, dt_utc.day)
-
-    # Day GanZhi
-    d_gz = lunar_day.getDayGZ()
+def get_day_master(year:int, month:int, day:int, hour:int, minute:int):
+    """Return Day Master stem index and details."""
+    lunar = sxtwl.Lunar()
+    day_obj = lunar.getDayBySolar(year, month, day)
+    d_gz = day_obj.getDayGZ()
     d_gan_idx = int(d_gz.tg)
-
-    return HEAVENLY_STEMS[d_gan_idx], HEAVENLY_STEMS_EN[d_gan_idx]
+    stem_char = HEAVENLY_STEMS[d_gan_idx]
+    stem_en = HEAVENLY_STEMS_EN[d_gan_idx]
+    element = ELEMENTS[d_gan_idx]
+    yin_yang = YINYANG[d_gan_idx]
+    return stem_char, stem_en, element, yin_yang
 
 # -------------------------
-# Streamlit UI
+# Streamlit App UI
 # -------------------------
-st.set_page_config(page_title="Whispers of YI — Day Master Calculator", layout="centered")
 
-st.title("Whispers of YI — Day Master Calculator")
-st.write("Calculate your **Day Master** (Heavenly Stem of your birth day) with timezone & full time input.")
+st.set_page_config(page_title="Whispers of YI — Day Master", layout="centered")
 
-if sxtwl is None:
-    st.error(
-        "The `sxtwl` library is not available. "
-        "Install it locally via `pip install sxtwl`, "
-        "or ensure it is listed in requirements.txt for Streamlit Cloud."
-    )
-    st.stop()
+st.title("Whispers of YI — Day Master")
+st.write("Enter your birth details to reveal your Day Master (Heavenly Stem of the Day).")
 
 # Input: Date
-dob = st.date_input("Date of Birth (YYYY-MM-DD)", min_value=datetime(1900,1,1).date())
+dob = st.date_input("Date of Birth", min_value=date(1900,1,1), max_value=date.today())
 
 # Input: Time
 birth_hour = st.number_input("Hour (0-23)", min_value=0, max_value=23, value=12)
 birth_minute = st.number_input("Minute (0-59)", min_value=0, max_value=59, value=0)
 
-# Input: Timezone as numeric offset
-tz_options = [
-    "-12","-11","-10","-9","-8","-7","-6","-5","-4","-3","-2","-1",
-    "0","1","2","3","3.5","4","4.5","5","5.5","5.75","6","6.5","7","8","9","9.5","10","11","12","13","14"
-]
+# Timezone
+tz_options = [str(x) for x in range(-12,15)] + ["3.5","4.5","5.5","5.75","6.5","9.5"]
 tz_default = "8"
-tz_offset = st.selectbox("Timezone (UTC offset, numeric)", options=tz_options, index=tz_options.index(tz_default))
-dst = st.checkbox("Daylight saving in effect at birth (+1 hour)?", value=False)
+tz = st.selectbox("Time zone — UTC offset", options=tz_options, index=tz_options.index(tz_default))
 
-# Calculate button
+# Button
 if st.button("Reveal Day Master"):
-    Y, M, D = dob.year, dob.month, dob.day
-    tz_val = float(tz_offset)
-    if dst:
-        tz_val += 1.0
+    Y = dob.year
+    M = dob.month
+    D = dob.day
+    h = birth_hour
+    mi = birth_minute
 
     try:
-        stem_char, stem_en = get_day_master(Y, M, D, birth_hour, birth_minute, tz_val)
+        stem_char, stem_en, element, yin_yang = get_day_master(Y,M,D,h,mi)
         st.subheader("Your Day Master:")
-        st.write(f"**{stem_char} — {stem_en}**")
-        st.info("This is solar-term-aware and handles leap months. Optional Year/Hour Pillars can be added in future updates.")
+        st.success(f"{stem_char} — {stem_en} — {element} ({yin_yang})")
+
+        # Legend
+        st.markdown("---")
+        st.subheader("Day Master Reference")
+        legend_md = "| Stem | English | Element | Yin/Yang |\n|---|---|---|---|\n"
+        for i in range(10):
+            legend_md += f"| {HEAVENLY_STEMS[i]} | {HEAVENLY_STEMS_EN[i]} | {ELEMENTS[i]} | {YINYANG[i]} |\n"
+        st.markdown(legend_md)
     except Exception as e:
         st.error(f"Calculation failed: {e}")
-
-st.caption("Ensure your birth time is as accurate as possible for correct Day Master calculation. Timezone matters for precise results.")
