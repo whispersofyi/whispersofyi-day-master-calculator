@@ -1,3 +1,3 @@
-streamlit>=1.30.0
-pytz
-sxtwl
+streamlit>=1.26.0
+sxtwl>=1.0.22
+pytz>=2025.7
