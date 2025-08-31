@@ -1,85 +1,85 @@
 # bazi_app.py
 
 import streamlit as st
-from datetime import datetime, timedelta
+from datetime import datetime, date, time as dtime
 import pytz
 
-# -------------------------
-# BaZi Helpers
-# -------------------------
+# Attempt to import sxtwl
 try:
     import sxtwl
 except ImportError:
     sxtwl = None
 
-HEAVENLY_STEMS = ["Jia","Yi","Bing","Ding","Wu","Ji","Geng","Xin","Ren","Gui"]
+# Heavenly Stems & Earthly Branches
+HEAVENLY_STEMS = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
 HEAVENLY_STEMS_EN = ["Jia","Yi","Bing","Ding","Wu","Ji","Geng","Xin","Ren","Gui"]
-EARTHLY_BRANCHES = ["Zi","Chou","Yin","Mao","Chen","Si","Wu","Wei","Shen","You","Xu","Hai"]
 
-# Map stem to element
-STEM_ELEMENTS = {
-    "Jia": "Wood",
-    "Yi": "Wood",
-    "Bing": "Fire",
-    "Ding": "Fire",
-    "Wu": "Earth",
-    "Ji": "Earth",
-    "Geng": "Metal",
-    "Xin": "Metal",
-    "Ren": "Water",
-    "Gui": "Water"
-}
+def hour_branch_index(hour: int) -> int:
+    """Return Earthly Branch index for Chinese hour (2-hour blocks)."""
+    return ((hour + 1) // 2) % 12
 
-def get_day_master(year:int, month:int, day:int):
+def get_day_master(year: int, month: int, day: int) -> dict:
+    """
+    Returns Day Master stem (Heavenly Stem) for a given Gregorian date.
+    Uses sxtwl (latest API) and lunar calendar corrections.
+    """
     if sxtwl is None:
-        raise RuntimeError("sxtwl library not installed. Install via `pip install sxtwl`.")
+        raise RuntimeError("sxtwl library not installed. Please add it to requirements.txt and install.")
 
-    day_obj = sxtwl.fromSolar(year, month, day)
-    d_gan_idx = day_obj.getDayTianGan()  # 0-9
-    gan = HEAVENLY_STEMS[d_gan_idx]
-    element = STEM_ELEMENTS[gan]
-    return f"{gan} — {gan} ({element})"
+    lunar = sxtwl.Lunar()  # latest sxtwl uses Lunar() to access methods
+    day_obj = lunar.getDayBySolar(year, month, day)
 
-# -------------------------
-# Streamlit UI
-# -------------------------
-st.set_page_config(page_title="Whispers of YI — Day Master", layout="centered")
+    # Day Master (Heavenly Stem of the day)
+    dm_idx = day_obj.Tg  # Updated property name in latest sxtwl
+    return {
+        "index": dm_idx,
+        "stem_ch": HEAVENLY_STEMS[dm_idx],
+        "stem_en": HEAVENLY_STEMS_EN[dm_idx]
+    }
 
-st.title("Whispers of YI — Day Master")
-st.write("Enter your birth details to calculate your Day Master (Gan of the Day).")
+# --- Streamlit UI ---
+st.set_page_config(page_title="Whispers of YI · Day Master", layout="centered")
+
+st.title("Whispers of YI · Day Master")
+st.write("Enter your birth date, time, and timezone to find your Day Master (Heavenly Stem).")
 
 if sxtwl is None:
-    st.error("The `sxtwl` library is not installed. Please install via `pip install sxtwl` and rerun.")
+    st.error(
+        "The `sxtwl` library is not installed. "
+        "Install locally with `pip install sxtwl` or add it to requirements.txt for Streamlit Cloud."
+    )
     st.stop()
 
-# Input: Date
-dob = st.date_input("Date of Birth (YYYY-MM-DD)", min_value=datetime(1900,1,1), max_value=datetime.now())
+# Input: Date of Birth
+dob = st.date_input("Date of Birth", min_value=date(1900,1,1))
 
-# Input: Time
-birth_hour = st.number_input("Hour (0-23)", min_value=0, max_value=23, value=12)
-birth_minute = st.number_input("Minute (0-59)", min_value=0, max_value=59, value=0)
+# Input: Time of Birth
+btime = st.time_input("Time of Birth", value=dtime(hour=12, minute=0))
 
-# Input: Timezone (string for pytz)
-timezone_input = st.selectbox(
-    "Timezone",
+# Input: Timezone
+tz_input = st.selectbox(
+    "Timezone (UTC offset)",
     pytz.all_timezones,
     index=pytz.all_timezones.index("Asia/Kuala_Lumpur") if "Asia/Kuala_Lumpur" in pytz.all_timezones else 0
 )
 
+# Button
 if st.button("Reveal Day Master"):
+    year, month, day = dob.year, dob.month, dob.day
+    hour, minute = btime.hour, btime.minute
+
+    # Apply timezone
     try:
-        tz = pytz.timezone(timezone_input)
-    except:
+        tz = pytz.timezone(tz_input)
+    except Exception:
         tz = pytz.UTC
-
-    local_dt = datetime(dob.year, dob.month, dob.day, birth_hour, birth_minute)
-    local_dt = tz.localize(local_dt)
+    dt = datetime(year, month, day, hour, minute, tzinfo=tz)
 
     try:
-        day_master_str = get_day_master(local_dt.year, local_dt.month, local_dt.day)
-        st.subheader("Your Day Master")
-        st.success(day_master_str)
+        dm = get_day_master(year, month, day)
     except Exception as e:
         st.error(f"Calculation failed: {e}")
-
-st.caption("Whispers of YI — a quiet companion for your journey.")
+    else:
+        st.subheader("Your Day Master (Heavenly Stem)")
+        st.markdown(f"**{dm['stem_ch']} — {dm['stem_en']}**")
+        st.info("This is the Heavenly Stem of your birth day, also called your Day Master in BaZi.")
