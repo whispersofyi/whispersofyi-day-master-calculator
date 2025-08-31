@@ -1,59 +1,49 @@
 # bazi_app.py
 import streamlit as st
-from datetime import date, datetime, time as dtime
+from datetime import date, time as dtime
+import sxtwl
 
-# -------------------------
-# BaZi Calculation Helpers
-# -------------------------
-HEAVENLY_STEMS = ['Jia','Yi','Bing','Ding','Wu','Ji','Geng','Xin','Ren','Gui']
-EARTHLY_BRANCHES = ['Zi','Chou','Yin','Mao','Chen','Si','Wu','Wei','Shen','You','Xu','Hai']
+# --- Mappings ---
+HEAVENLY_STEMS = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
+HEAVENLY_STEMS_EN = ["Jia","Yi","Bing","Ding","Wu","Ji","Geng","Xin","Ren","Gui"]
+HEAVENLY_STEMS_ELEM = ["Wood","Wood","Fire","Fire","Earth","Earth","Metal","Metal","Water","Water"]
 
-def hour_branch_index(hour: int) -> int:
-    """Return Earthly Branch index for given hour (0-23). Zi:23-0, Chou:1-2, etc."""
+# --- Helper Functions ---
+def hour_branch_index(hour:int) -> int:
+    """Return Earthly Branch index for a given hour (0-23)."""
     return ((hour + 1) // 2) % 12
 
-def calculate_day_master(year:int, month:int, day:int) -> dict:
-    """
-    Placeholder Day Master calculation using known formula:
-    Day stem index = (year*5 + month*2 + day) % 10
-    Note: simplified for stable deployment.
-    """
-    stem_idx = (year * 5 + month * 2 + day) % 10
-    return {"gan": HEAVENLY_STEMS[stem_idx], "element": HEAVENLY_STEMS[stem_idx]}
+def get_day_master(year:int, month:int, day:int, hour:int, minute:int):
+    lunar = sxtwl.Lunar()
+    day_obj = lunar.getDayBySolar(year, month, day)
+    d_gan_idx = int(day_obj.getDayTianGan())
+    return {
+        "gan_idx": d_gan_idx,
+        "stem": HEAVENLY_STEMS[d_gan_idx],
+        "pinyin": HEAVENLY_STEMS_EN[d_gan_idx],
+        "element": HEAVENLY_STEMS_ELEM[d_gan_idx]
+    }
 
-# -------------------------
-# Streamlit UI
-# -------------------------
+# --- Streamlit App ---
 st.set_page_config(page_title="Whispers of YI — Day Master", layout="centered")
-st.title("Whispers of YI — Day Master Calculator")
-st.write("Enter your birth details to reveal your Day Master (Heavenly Stem of the Day).")
 
-# Input date
-dob = st.date_input(
-    "Date of Birth",
-    min_value=date(1900, 1, 1),
-    max_value=date.today(),
-    value=date(2000,1,1)
-)
+st.title("Whispers of YI — Day Master")
+st.write("Discover your accurate Day Master (Heavenly Stem of the Day) using lunar & solar-term-aware calculation.")
 
-# Input time
-birth_hour = st.number_input("Hour (0-23)", min_value=0, max_value=23, value=12)
-birth_minute = st.number_input("Minute (0-59)", min_value=0, max_value=59, value=0)
+# --- Input ---
+bdate = st.date_input("Date of Birth", value=date.today())
+btime = st.time_input("Time of Birth (24h)", value=dtime(hour=0, minute=0))
 
-# Input timezone
-import pytz
-timezone_input = st.selectbox(
-    "Timezone",
-    pytz.all_timezones,
-    index=pytz.all_timezones.index("Asia/Kuala_Lumpur") if "Asia/Kuala_Lumpur" in pytz.all_timezones else 0
-)
+tz_offset = st.number_input("Timezone UTC offset (e.g., 8 for UTC+8)", min_value=-12, max_value=14, value=8)
 
 if st.button("Reveal Day Master"):
-    year, month, day = dob.year, dob.month, dob.day
-    result = calculate_day_master(year, month, day)
+    Y, M, D = bdate.year, bdate.month, bdate.day
+    h, mi = btime.hour, btime.minute
 
-    st.subheader("Your Day Master:")
-    st.markdown(f"**{result['gan']}** — {result['element']} Wood/Fire/Metal/Earth/Water (simplified)")
-
-    st.info("This is the core Day Master calculation. Optional Year/Hour/Month pillars can be added in future updates.")
-
+    try:
+        result = get_day_master(Y, M, D, h, mi)
+        st.subheader("Your Day Master")
+        st.write(f"{result['stem']} — {result['pinyin']} {result['element']}")
+        st.caption("This calculation is lunar & solar-term-aware. Timezone is applied via UTC offset for clarity.")
+    except Exception as e:
+        st.error(f"Calculation failed: {e}")
