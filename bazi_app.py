@@ -56,8 +56,8 @@ def safe_get_pillars(year:int, month:int, day:int, hour:int, minute:int):
 # -------------------------
 # Streamlit UI
 # -------------------------
-st.set_page_config(page_title="Whispers of Yi · BaZi Companion", layout="centered")
-st.title("Whispers of Yi · BaZi Companion")
+st.set_page_config(page_title="Whispers of YI · BaZi Companion", layout="centered")
+st.title("Whispers of YI · BaZi Companion")
 st.write("A quiet, accurate Four-Pillars (BaZi) tool — lunar & solar-term aware. Enter your birth details to see your Four Pillars.")
 
 if sxtwl is None:
