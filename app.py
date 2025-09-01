@@ -404,166 +404,6 @@ DAY_MASTER_DATA = {
         "compatibility": "Benefits from the warmth of Yin Fire (丁), which brings energy and vitality to your stable foundation. Yin Water (癸) provides nourishment and helps your practical nature flourish with renewed growth.",
         "career_paths": "Financial planning and investment management, real estate development and management, construction and engineering, agriculture and resource management, banking and insurance, project management, operations management, accounting and auditing, supply chain management, and any field requiring practical skills, financial acumen, and long-term planning.",
         "life_philosophy": "Build solid foundations that will endure. You believe that true wealth comes from patient accumulation, wise stewardship, and creating security that benefits multiple generations."
-    },
-    "己": {
-        "name": "Yin Earth",
-        "element": "Nurturing Soil",
-        "description": "The Yin Earth day master represents the fertile, nurturing soil from which all life springs. You possess an remarkable ability to recognize potential in others and create the perfect conditions for their growth and development. Like rich garden soil that transforms seeds into flourishing plants, you have the patience and wisdom to nurture talents and abilities until they reach full bloom. Your strength lies in your understanding that the greatest achievements come not from force but from creating supportive environments where natural growth can occur. You are the teacher who sees brilliance in struggling students, the manager who develops overlooked talent, and the friend who believes in others even when they don't believe in themselves.",
-        "positive_traits": [
-            "Exceptional ability to nurture and develop the potential in others",
-            "Patient, understanding nature that creates safe spaces for growth",
-            "Natural teaching and mentoring abilities that transform lives",
-            "Intuitive understanding of what others need to succeed",
-            "Stable, grounding presence that helps others find their center",
-            "Generous spirit that gives freely without expecting returns",
-            "Ability to see the good in people even when they can't see it themselves",
-            "Excellent listening skills and empathetic understanding",
-            "Natural talent for creating harmonious, supportive environments",
-            "Deep wisdom about human nature and personal development"
-        ],
-        "challenges": [
-            "Tendency to sacrifice your own needs for others' growth and happiness",
-            "May neglect self-care while focusing entirely on supporting others",
-            "Possible passivity when decisive action is needed",
-            "Vulnerability to being taken advantage of due to generous nature",
-            "Difficulty setting healthy boundaries with demanding people",
-            "May become depleted from constant giving without receiving",
-            "Tendency to enable others rather than encouraging independence",
-            "Possible resentment when your support isn't appreciated or reciprocated",
-            "Difficulty advocating for yourself or pursuing personal ambitions",
-            "May struggle with confrontation even when it's necessary for growth"
-        ],
-        "compatibility": "Thrives with Yang Fire (丙), which brings energy and vitality that helps you flourish while you nurture others. Yang Water (壬) provides the flow and movement that prevents stagnation in your supportive nature.",
-        "career_paths": "Teaching and education, counseling and therapy, social work and community development, healthcare and nursing, human resources and talent development, childcare and family services, nutrition and wellness, agriculture and gardening, organizational development, and any field focused on helping others grow and develop their potential.",
-        "life_philosophy": "Growth happens through nurturing care and patient support. You believe that the highest purpose in life is to help others discover and develop their unique gifts and talents."
-    },
-    "庚": {
-        "name": "Yang Metal",
-        "element": "Refined Steel",
-        "description": "The Yang Metal day master embodies the strength of tempered steel and the precision of a masterfully crafted blade. You possess an unwavering determination that cuts through obstacles and challenges with decisive action. Like a sword forged in fire and shaped by countless hammer blows, you have been strengthened by adversity and refined by experience. Your mind is sharp, your judgment clear, and your ability to make difficult decisions sets you apart as a natural leader in times of crisis. You have the rare courage to do what's right rather than what's easy, and your integrity is as unbreakable as the finest steel.",
-        "positive_traits": [
-            "Exceptional strength of will and determination to overcome any obstacle",
-            "Sharp analytical mind that quickly identifies problems and solutions",
-            "Direct, honest communication that people respect even when it's difficult to hear",
-            "Outstanding decision-making abilities, especially under pressure",
-            "Natural sense of justice and fairness that guides all actions",
-            "Courage to take unpopular stands when principles are at stake",
-            "Ability to cut through complexity and focus on essential issues",
-            "Strong leadership presence that inspires confidence in uncertain times",
-            "Excellent crisis management skills with calm, decisive action",
-            "Unwavering integrity that makes you completely trustworthy"
-        ],
-        "challenges": [
-            "May be too harsh or critical when dealing with others' mistakes",
-            "Difficulty understanding or expressing emotional nuances",
-            "Tendency to be inflexible once a decision has been made",
-            "Possible insensitivity to others' feelings when focused on results",
-            "May create unnecessary conflict through overly direct communication",
-            "Difficulty with tasks requiring diplomacy or subtle negotiation",
-            "Tendency to judge others by your own high standards",
-            "May struggle with patience when others work at different speeds",
-            "Possible difficulty delegating due to concerns about quality",
-            "May appear intimidating or unapproachable to sensitive individuals"
-        ],
-        "compatibility": "Finds perfect refinement with Yin Wood (乙), which helps shape and direct your strength toward beautiful and useful purposes. Yin Fire (丁) provides the precise heat needed to temper your abilities into their finest form.",
-        "career_paths": "Law enforcement and military leadership, surgical medicine, legal advocacy, engineering and manufacturing, sports and athletics, executive leadership, crisis management, quality control, competitive industries, entrepreneurship, and any field requiring decisive action, strong judgment, and unwavering principles.",
-        "life_philosophy": "Strength must be tempered with purpose, and power must serve justice. You believe that true leadership means making the hard choices that others cannot or will not make."
-    },
-    "辛": {
-        "name": "Yin Metal",
-        "element": "Precious Jewelry",
-        "description": "The Yin Metal day master represents the exquisite beauty of fine jewelry and the precious value of refined craftsmanship. You possess an innate appreciation for quality, elegance, and the finer things in life. Like a rare gem that reveals new facets of beauty under different lights, you have multiple talents and interests that continue to develop throughout your life. Your refined sensibilities and attention to detail create work of exceptional quality and lasting value. You understand that true beauty comes not from flashy display but from subtle perfection and masterful execution. Your diplomatic nature and aesthetic sense make you a natural mediator who can find elegant solutions to complex problems.",
-        "positive_traits": [
-            "Exceptional attention to detail that ensures quality and precision in all work",
-            "Refined aesthetic sense that creates beauty and elegance",
-            "Natural diplomatic abilities that resolve conflicts gracefully",
-            "High standards that result in work of superior quality",
-            "Sophisticated understanding of value, both material and intangible",
-            "Excellent taste in design, fashion, and artistic expression",
-            "Ability to find elegant solutions to complex problems",
-            "Natural talent for creating harmony and beauty in environments",
-            "Understanding of quality over quantity principles",
-            "Capacity for patience and meticulous craftsmanship"
-        ],
-        "challenges": [
-            "Tendency toward perfectionism that can delay completion of projects",
-            "May be overly self-critical and never satisfied with your own achievements",
-            "Difficulty making quick decisions due to desire to consider all options",
-            "Possible excessive concern with material possessions or status symbols",
-            "May lack the boldness needed for breakthrough innovations",
-            "Tendency to avoid risks that could lead to valuable opportunities",
-            "Possible indecisiveness when faced with imperfect choices",
-            "May be overly influenced by others' opinions and external validation",
-            "Difficulty with tasks that require quick, rough approximations",
-            "Tendency to procrastinate when perfectionist standards seem unattainable"
-        ],
-        "compatibility": "Sparkles brilliantly with Yang Wood (甲), which provides the strong foundation needed to showcase your refined abilities. Yang Fire (丙) brings the energy and warmth that helps your talents shine brightest.",
-        "career_paths": "Jewelry design and luxury goods, fashion and beauty industry, interior design and decoration, fine arts and craftsmanship, quality assurance and consulting, diplomatic services, hospitality and luxury services, marketing and brand management, and any field requiring aesthetic judgment, attention to detail, and refined taste.",
-        "life_philosophy": "Excellence is found in the details, and true beauty comes from patient refinement. You believe that life should be lived with grace, quality, and appreciation for the finer things."
-    },
-    "壬": {
-        "name": "Yang Water",
-        "element": "Flowing River",
-        "description": "The Yang Water day master embodies the dynamic power of rivers and oceans - constantly moving, adapting, and finding new paths toward your destination. You possess remarkable fluidity of thought and action, able to navigate around obstacles with the same natural ease that water flows around rocks. Your wisdom comes from understanding that the softest force can overcome the hardest resistance through persistence and patience. Like water that connects all lands and nourishes all life, you have a natural ability to bring people together and facilitate communication between different groups. Your adaptability is your greatest strength, allowing you to thrive in almost any environment or situation.",
-        "positive_traits": [
-            "Exceptional adaptability that allows you to thrive in any environment",
-            "Natural wisdom that comes from broad experience and observation",
-            "Outstanding communication skills that connect diverse people and ideas",
-            "Intuitive understanding of human nature and social dynamics",
-            "Ability to find creative solutions by thinking around problems",
-            "Natural networking abilities that create valuable connections",
-            "Fluid intelligence that grasps concepts quickly and completely",
-            "Excellent mediating skills that help resolve conflicts peacefully",
-            "Capacity to bring out the best in others through understanding and encouragement",
-            "Resilient nature that bounces back from setbacks with renewed energy"
-        ],
-        "challenges": [
-            "Tendency to be inconsistent or change direction too frequently",
-            "May lack the focus needed for deep specialization",
-            "Possible emotional volatility that affects decision-making",
-            "Difficulty with long-term commitments that require sustained focus",
-            "May avoid taking responsibility for difficult or unpopular decisions",
-            "Tendency to go with the flow even when decisive action is needed",
-            "Possible manipulation of others through emotional influence",
-            "May scatter energy across too many interests without mastering any",
-            "Difficulty sticking with projects when initial enthusiasm wanes",
-            "Tendency to avoid confrontation even when it's necessary"
-        ],
-        "compatibility": "Flows beautifully with Yang Earth (戊), which provides the banks and direction that channel your energy toward productive outcomes. Yang Wood (甲) offers stability and purpose that helps focus your adaptable nature.",
-        "career_paths": "Communications and media, transportation and logistics, international relations and diplomacy, counseling and social work, sales and marketing, teaching and education, travel and hospitality, consulting and advisory services, and any field requiring adaptability, communication skills, and the ability to work with diverse groups of people.",
-        "life_philosophy": "Flow with life's currents while maintaining your essential direction. You believe that wisdom comes from experience and that the greatest strength lies in the ability to adapt while staying true to your core values."
-    },
-    "癸": {
-        "name": "Yin Water",
-        "element": "Gentle Rain",
-        "description": "The Yin Water day master represents the quiet power of morning dew, gentle rain, and underground springs - subtle yet essential forces that sustain all life. You possess a profound intuitive understanding that penetrates beneath surface appearances to touch the deeper truths of existence. Like rain that falls softly but penetrates to the roots of all growing things, your influence is gentle yet transformative. Your compassionate nature and healing presence bring comfort to those in pain and hope to those in despair. You understand that the greatest changes often come through small, consistent acts of kindness rather than dramatic gestures. Your sensitivity is both your gift and your challenge, allowing you to understand others deeply while sometimes absorbing their pain as your own.",
-        "positive_traits": [
-            "Profound intuitive understanding that sees beyond surface appearances",
-            "Gentle, compassionate nature that heals and comforts others",
-            "Exceptional emotional intelligence and empathy",
-            "Natural ability to provide emotional support and guidance",
-            "Highly adaptable nature that flows with life's changes",
-            "Deep spiritual connection and understanding of life's mysteries",
-            "Talent for research and investigation that uncovers hidden truths",
-            "Ability to work quietly behind the scenes to create positive change",
-            "Natural healing presence that brings peace to troubled situations",
-            "Subtle influence that transforms people and situations over time"
-        ],
-        "challenges": [
-            "Extreme sensitivity that can be overwhelming in harsh environments",
-            "Tendency to absorb others' emotions and problems as your own",
-            "May lack assertiveness when direct action is required",
-            "Possible avoidance of confrontation even when necessary",
-            "Vulnerability to being taken advantage of due to gentle nature",
-            "May become overwhelmed by too much emotional stimulation",
-            "Difficulty setting boundaries with needy or demanding people",
-            "Tendency to withdraw when stressed rather than addressing problems",
-            "May underestimate your own strength and capabilities",
-            "Possible pessimism or depression when exposed to too much negativity"
-        ],
-        "compatibility": "Flourishes with Yang Fire (丙), which provides warmth and energy that helps you feel secure and confident. Yin Earth (己) offers the gentle support and understanding that allows your sensitive nature to thrive.",
-        "career_paths": "Healthcare and healing professions, counseling and therapy, spiritual guidance and ministry, research and investigation, writing and poetry, social work and humanitarian causes, psychology and mental health, environmental conservation, alternative healing modalities, and any field requiring compassion, intuition, and the ability to help others heal and grow.",
-        "life_philosophy": "Healing happens through gentle persistence and compassionate understanding. You believe that everyone has the potential for growth and that small acts of kindness can create profound transformations."
     }
 }
 
@@ -698,33 +538,32 @@ if submit_button:
             st.markdown('<div class="success-message">Your Day Master has been calculated successfully</div>', unsafe_allow_html=True)
             
             # Four Pillars display
-            st.markdown("""
+            st.markdown(f"""
             <div class="pillars-container">
                 <div class="pillar-card">
                     <div class="pillar-title">Year Pillar</div>
-                    <div class="pillar-content">{}</div>
+                    <div class="pillar-content">{pillars['year']}</div>
                     <div class="pillar-description">Ancestry & Foundation</div>
                 </div>
                 <div class="pillar-card">
                     <div class="pillar-title">Month Pillar</div>
-                    <div class="pillar-content">{}</div>
+                    <div class="pillar-content">{pillars['month']}</div>
                     <div class="pillar-description">Career & Relationships</div>
                 </div>
                 <div class="pillar-card">
                     <div class="pillar-title">Day Pillar</div>
-                    <div class="pillar-content">{}</div>
+                    <div class="pillar-content">{pillars['day']}</div>
                     <div class="pillar-description">Self & Spouse</div>
                 </div>
                 <div class="pillar-card">
                     <div class="pillar-title">Hour Pillar</div>
-                    <div class="pillar-content">{}</div>
+                    <div class="pillar-content">{pillars['hour']}</div>
                     <div class="pillar-description">Children & Legacy</div>
                 </div>
             </div>
-            """.format(pillars['year'], pillars['month'], pillars['day'], pillars['hour']), 
-            unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
             
-            # Day Master Analysis
+            # Day Master Analysis - FIXED SECTION
             st.markdown(f"""
             <div class="result-container">
                 <div class="day-master-header">
@@ -785,7 +624,7 @@ if submit_button:
                 st.write("**Important Note:** This calculator uses a simplified algorithm for demonstration purposes. Professional BaZi readings require precise astronomical calculations, solar calendar conversions, and consideration of birth location. For serious life decisions, consult with a qualified BaZi practitioner.")
         
         except Exception as e:
-            st.markdown(f'<div class="error-message">An error occurred during calculation. Please check your input and try again.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="error-message">An error occurred during calculation. Please check your input and try again.</div>', unsafe_allow_html=True)
 
 else:
     # Instructions when no calculation has been performed
