@@ -725,53 +725,53 @@ if submit_button:
             unsafe_allow_html=True)
             
             # Day Master Analysis
-            st.markdown(f"""
-            <div class="result-container">
-                <div class="day-master-header">
-                    <div class="day-master-title">{day_master_info['name']}</div>
-                    <div class="day-master-element">{day_master_info['element']} ({day_master_key})</div>
-                </div>
-                
-                <div class="description-text">
-                    {day_master_info['description']}
-                </div>
-                
-                <div class="trait-section">
-                    <div class="trait-title">Natural Strengths & Positive Traits</div>
-                    <div class="trait-list">
-                        {''.join([f'<div class="trait-item">{trait}</div>' for trait in day_master_info['positive_traits']])}
-                    </div>
-                </div>
-                
-                <div class="trait-section">
-                    <div class="trait-title">Growth Areas & Potential Challenges</div>
-                    <div class="trait-list">
-                        {''.join([f'<div class="trait-item">{trait}</div>' for trait in day_master_info['challenges']])}
-                    </div>
-                </div>
-                
-                <div class="trait-section">
-                    <div class="trait-title">Elemental Harmony & Compatibility</div>
-                    <div class="description-text">
-                        {day_master_info['compatibility']}
-                    </div>
-                </div>
-                
-                <div class="trait-section">
-                    <div class="trait-title">Career Paths & Life Direction</div>
-                    <div class="description-text">
-                        {day_master_info['career_paths']}
-                    </div>
-                </div>
-                
-                <div class="trait-section">
-                    <div class="trait-title">Life Philosophy & Core Values</div>
-                    <div class="description-text">
-                        {day_master_info['life_philosophy']}
-                    </div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+st.markdown(f"""
+<div class="result-container">
+    <div class="day-master-header">
+        <div class="day-master-title">{day_master_info['name']}</div>
+        <div class="day-master-element">{day_master_info['element']} ({day_master_key})</div>
+    </div>
+    
+    <div class="description-text">
+        {day_master_info['description']}
+    </div>
+    
+    <div class="trait-section">
+        <div class="trait-title">Natural Strengths & Positive Traits</div>
+        <div class="trait-list">
+            {''.join([f'<div class="trait-item">{trait}</div>' for trait in day_master_info['positive_traits']])}
+        </div>
+    </div>
+    
+    <div class="trait-section">
+        <div class="trait-title">Growth Areas & Potential Challenges</div>
+        <div class="trait-list">
+            {''.join([f'<div class="trait-item">{trait}</div>' for trait in day_master_info['challenges']])}
+        </div>
+    </div>
+    
+    <div class="trait-section">
+        <div class="trait-title">Elemental Harmony & Compatibility</div>
+        <div class="description-text">
+            {day_master_info['compatibility']}
+        </div>
+    </div>
+    
+    <div class="trait-section">
+        <div class="trait-title">Career Paths & Life Direction</div>
+        <div class="description-text">
+            {day_master_info['career_paths']}
+        </div>
+    </div>
+    
+    <div class="trait-section">
+        <div class="trait-title">Life Philosophy & Core Values</div>
+        <div class="description-text">
+            {day_master_info['life_philosophy']}
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
             
             # Additional birth information
             with st.expander("Birth Details & Technical Information"):
