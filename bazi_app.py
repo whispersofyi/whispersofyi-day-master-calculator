@@ -1,75 +1,67 @@
-# bazi_app.py
+# app.py
 import streamlit as st
-from datetime import datetime, time as dtime
+import datetime
 import pytz
+from bazi_calculator import calculate_bazi
 
-# Ensure sxtwl is installed and import
-try:
-    import sxtwl
-except ImportError:
-    st.error("The `sxtwl` library is not installed. Please run `pip install sxtwl`.")
-    st.stop()
+st.set_page_config(page_title="Accurate Bazi Calculator", page_icon="☯️")
+st.title("☯️ Accurate Bazi Day Master Calculator")
+st.markdown("""
+This calculator uses astronomical calculations to determine the **Start of Spring (立春)** 
+and Solar Terms for accurate year and month pillars.
+""")
 
-# --- Heavenly Stems ---
-HEAVENLY_STEMS = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
-HEAVENLY_STEMS_EN = ["Jia","Yi","Bing","Ding","Wu","Ji","Geng","Xin","Ren","Gui"]
+with st.sidebar:
+    st.header("Settings")
+    timezone_str = st.selectbox("Birth Timezone", pytz.all_timezones, index=pytz.all_timezones.index('Asia/Singapore'))
+    selected_tz = pytz.timezone(timezone_str)
 
-# --- Element mapping ---
-ELEMENTS = {
-    "Jia": "Wood",
-    "Yi": "Wood",
-    "Bing": "Fire",
-    "Ding": "Fire",
-    "Wu": "Earth",
-    "Ji": "Earth",
-    "Geng": "Metal",
-    "Xin": "Metal",
-    "Ren": "Water",
-    "Gui": "Water"
-}
+with st.form("birth_form"):
+    col1, col2 = st.columns(2)
+    with col1:
+        birth_date = st.date_input("Birth Date", datetime.date(1974, 12, 26))
+    with col2:
+        birth_time = st.time_input("Birth Time", datetime.time(1, 20))
+    
+    submitted = st.form_submit_button("Calculate My Bazi")
 
-# --- Streamlit UI ---
-st.set_page_config(page_title="Whispers of YI — Day Master", layout="centered")
-st.title("Whispers of YI — Day Master")
-st.write("Discover your accurate Day Master. Enter your birth date, time, and timezone.")
-
-# --- Inputs ---
-dob = st.date_input(
-    "Date of Birth",
-    min_value=datetime(1900,1,1),
-    max_value=datetime.today(),
-    value=datetime(2000,1,1)
-)
-
-birth_hour = st.number_input("Hour (0-23)", min_value=0, max_value=23, value=12)
-birth_minute = st.number_input("Minute (0-59)", min_value=0, max_value=59, value=0)
-
-timezone_input = st.selectbox(
-    "Timezone",
-    pytz.all_timezones,
-    index=pytz.all_timezones.index("Asia/Kuala_Lumpur") if "Asia/Kuala_Lumpur" in pytz.all_timezones else 0
-)
-
-if st.button("Reveal Day Master"):
-    # --- Build aware datetime ---
+if submitted:
     try:
-        tz = pytz.timezone(timezone_input)
-    except:
-        tz = pytz.UTC
-    dt = datetime(dob.year, dob.month, dob.day, birth_hour, birth_minute)
-    dt = tz.localize(dt)
-
-    # --- Accurate Day Master using sxtwl ---
-    try:
-        # sxtwl uses integers for year, month, day
-        day_obj = sxtwl.getDayBySolar(dob.year, dob.month, dob.day)
-        day_master_idx = day_obj.getDayTianGan()
-        day_master_zh = HEAVENLY_STEMS[day_master_idx]
-        day_master_en = HEAVENLY_STEMS_EN[day_master_idx]
-        element = ELEMENTS[day_master_en]
-
-        st.subheader("Your Day Master")
-        st.write(f"**{day_master_zh} — {day_master_en} ({element})**")
-
+        # Create timezone-aware datetime
+        local_dt = selected_tz.localize(datetime.datetime.combine(birth_date, birth_time))
+        utc_dt = local_dt.astimezone(pytz.UTC)
+        
+        pillars = calculate_bazi(utc_dt)
+        
+        st.success("Calculation Complete! ✅")
+        
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Year Pillar", f"{pillars['year'][0]}{pillars['year'][1]}")
+        with col2:
+            st.metric("Month Pillar", f"{pillars['month'][0]}{pillars['month'][1]}")
+        with col3:
+            st.metric("**Day Master**", f"**{pillars['day'][0]}{pillars['day'][1]}**")
+        with col4:
+            st.metric("Hour Pillar", f"{pillars['hour'][0]}{pillars['hour'][1]}")
+        
+        # Day Master interpretation
+        day_master_map = {
+            "甲": "Yang Wood (甲) - The大树 Big Tree",
+            "乙": "Yin Wood (乙) - The 花草 Flowers & Grass",
+            "丙": "Yang Fire (丙) - The 太阳 Sun",
+            "丁": "Yin Fire (丁) - The 灯烛 Lamp Flame",
+            "戊": "Yang Earth (戊) - The 城墙 Mountain",
+            "己": "Yin Earth (己) - The 田园 Garden Soil",
+            "庚": "Yang Metal (庚) - The 钢铁 Metal",
+            "辛": "Yin Metal (辛) - The 珠宝 Jewelry",
+            "壬": "Yang Water (壬) - The 大海 Ocean",
+            "癸": "Yin Water (癸) - The 雨露 Rain",
+        }
+        
+        day_master = pillars['day'][0]
+        st.info(f"**Your Day Master is {day_master_map.get(day_master, 'Unknown')}.**")
+        
     except Exception as e:
-        st.error(f"Calculation failed: {e}")
+        st.error(f"An error occurred: {e}")
+        st.info("Please check your input and try again.")
