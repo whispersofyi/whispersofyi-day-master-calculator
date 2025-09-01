@@ -3,22 +3,27 @@ import streamlit as st
 import datetime
 import math
 
-# Add custom CSS for Inter font and styling
+# Add custom CSS for Inter font and styling with proper contrast
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-html, body, [class*="css"]  {
+* {
     font-family: 'Inter', sans-serif;
+    color: #333333;
 }
 
 .stApp {
-    background-color: #fafafa;
+    background-color: #f8f9fa;
 }
 
 .stSidebar {
     background-color: #ffffff;
-    border-right: 1px solid #eaeaea;
+    border-right: 1px solid #e0e0e0;
+}
+
+.stSidebar .stNumberInput, .stSidebar .stSelectbox {
+    background-color: white;
 }
 
 .stButton>button {
@@ -27,6 +32,7 @@ html, body, [class*="css"]  {
     border: none;
     border-radius: 6px;
     font-weight: 500;
+    padding: 0.5rem 1rem;
 }
 
 .stButton>button:hover {
@@ -34,12 +40,37 @@ html, body, [class*="css"]  {
     color: white;
 }
 
-.metric-container {
-    background: white;
-    padding: 15px;
+/* Ensure all text is visible */
+h1, h2, h3, h4, h5, h6, p, div, span, label {
+    color: #333333 !important;
+}
+
+.stMetric {
+    background-color: white;
+    padding: 1rem;
     border-radius: 8px;
-    border: 1px solid #eaeaea;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stMetric label {
+    color: #666666 !important;
+    font-weight: 500;
+}
+
+.stMetric div {
+    color: #000000 !important;
+    font-weight: 600;
+}
+
+/* Fix expander styling */
+.streamlit-expanderHeader {
+    color: #333333 !important;
+    font-weight: 600;
+}
+
+.streamlit-expanderContent {
+    color: #333333 !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -75,24 +106,24 @@ HOUR_STEMS = {
     '甲': ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸', '甲', '乙'],
     '乙': ['丙', '丁', '戊', '己', '庚', '辛', '壬', '癸', '甲', '乙', '丙', '丁'],
     '丙': ['戊', '己', '庚', '辛', '壬', '癸', '甲', '乙', '丙', '丁', '戊', '己'],
-    '丁': ['庚', '辛', '壬', '癸', '甲', '乙', '丙', '丁', '戊', '己', '庚', '辛'],
+    '丁': ['庚', '辛', '壬', '癸', '甲', '极', '丙', '丁', '戊', '己', '庚', '辛'],
     '戊': ['壬', '癸', '甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'],
-    '己': ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸', '甲', '乙'],
+    '己': ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸', '甲', '极'],
     '庚': ['丙', '丁', '戊', '己', '庚', '辛', '壬', '癸', '甲', '乙', '丙', '丁'],
     '辛': ['戊', '己', '庚', '辛', '壬', '癸', '甲', '乙', '丙', '丁', '戊', '己'],
     '壬': ['庚', '辛', '壬', '癸', '甲', '乙', '丙', '丁', '戊', '己', '庚', '辛'],
-    '癸': ['壬', '癸', '甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
+    '癸': ['壬', '癸', '甲', '乙', '丙', '丁', '极', '己', '庚', '辛', '壬', '癸']
 }
 
 MONTH_STEM_RULES = {
-    '甲': {'寅': '丙', '卯': '丁', '辰': '戊', '巳': '己', '午': '庚', '未': '辛', '申': '壬', '酉': '癸', '戌': '甲', '亥': '乙', '子': '丙', '丑': '丁'},
-    '乙': {'寅': '戊', '卯': '己', '辰': '庚', '巳': '辛', '午': '壬', '未': '癸', '申': '甲', '酉': '乙', '戌': '丙', '亥': '丁', '子': '戊', '丑': '己'},
+    '甲': {'寅': '丙', '卯': '丁', '辰': '戊', '巳': '己', '午': '庚', '未': '辛', '申': '壬', '酉': '癸', '戌': '甲', '亥': '乙', '子': '丙', '极': '丁'},
+    '乙': {'寅': '戊', '卯': '己', '辰': '庚', '巳': '辛', '午': '壬', '未': '癸', '极': '甲', '酉': '乙', '戌': '丙', '亥': '丁', '子': '戊', '丑': '己'},
     '丙': {'寅': '庚', '卯': '辛', '辰': '壬', '巳': '癸', '午': '甲', '未': '乙', '申': '丙', '酉': '丁', '戌': '戊', '亥': '己', '子': '庚', '丑': '辛'},
     '丁': {'寅': '壬', '卯': '癸', '辰': '甲', '巳': '乙', '午': '丙', '未': '丁', '申': '戊', '酉': '己', '戌': '庚', '亥': '辛', '子': '壬', '丑': '癸'},
-    '戊': {'寅': '甲', '卯': '乙', '辰': '丙', '巳': '丁', '午': '戊', '未': '己', '申': '庚', '酉': '辛', '戌': '壬', '亥': '癸', '子': '甲', '丑': '乙'},
-    '己': {'寅': '丙', '卯': '丁', '辰': '戊', '巳': '己', '午': '庚', '未': '辛', '申': '壬', '酉': '癸', '戌': '甲', '亥': '乙', '子': '丙', '丑': '丁'},
+    '戊': {'寅': '甲', '卯': '极', '辰': '丙', '巳': '丁', '午': '戊', '未': '己', '申': '庚', '酉': '辛', '戌': '壬', '亥': '癸', '子': '甲', '丑': '乙'},
+    '己': {'寅': '丙', '卯': '丁', '辰': '戊', '巳': '己', '午': '庚', '未': '辛', '申': '壬', '酉': '癸', '戌': '甲', '亥': '乙', '子': '极', '丑': '丁'},
     '庚': {'寅': '戊', '卯': '己', '辰': '庚', '巳': '辛', '午': '壬', '未': '癸', '申': '甲', '酉': '乙', '戌': '丙', '亥': '丁', '子': '戊', '丑': '己'},
-    '辛': {'寅': '庚', '卯': '辛', '辰': '壬', '巳': '癸', '午': '甲', '未': '乙', '申': '丙', '酉': '丁', '戌': '戊', '亥': '己', '子': '庚', '丑': '辛'},
+    '辛': {'寅': '庚', '卯': '辛', '辰': '壬', '极': '癸', '午': '甲', '未': '乙', '申': '丙', '酉': '丁', '戌': '戊', '亥': '己', '子': '庚', '丑': '辛'},
     '壬': {'寅': '壬', '卯': '癸', '辰': '甲', '巳': '乙', '午': '丙', '未': '丁', '申': '戊', '酉': '己', '戌': '庚', '亥': '辛', '子': '壬', '丑': '癸'},
     '癸': {'寅': '甲', '卯': '乙', '辰': '丙', '巳': '丁', '午': '戊', '未': '己', '申': '庚', '酉': '辛', '戌': '壬', '亥': '癸', '子': '甲', '丑': '乙'}
 }
@@ -264,32 +295,24 @@ if submitted:
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            st.markdown('<div class="metric-container">', unsafe_allow_html=True)
             st.metric("Year Pillar", 
                      f"{pillars['year'][0]}{pillars['year'][1]}", 
                      f"{pillars['year'][2]} {pillars['year'][3]}")
-            st.markdown('</div>', unsafe_allow_html=True)
         
         with col2:
-            st.markdown('<div class="metric-container">', unsafe_allow_html=True)
             st.metric("Month Pillar", 
                      f"{pillars['month'][0]}{pillars['month'][1]}", 
                      f"{pillars['month'][2]} {pillars['month'][3]}")
-            st.markdown('</div>', unsafe_allow_html=True)
         
         with col3:
-            st.markdown('<div class="metric-container">', unsafe_allow_html=True)
             st.metric("Day Master", 
                      f"**{pillars['day'][0]}{pillars['day'][1]}**", 
                      f"**{pillars['day'][2]} {pillars['day'][3]}**")
-            st.markdown('</div>', unsafe_allow_html=True)
         
         with col4:
-            st.markdown('<div class="metric-container">', unsafe_allow_html=True)
             st.metric("Hour Pillar", 
                      f"{pillars['hour'][0]}{pillars['hour'][1]}", 
                      f"{pillars['hour'][2]} {pillars['hour'][3]}")
-            st.markdown('</div>', unsafe_allow_html=True)
         
         # Day Master interpretation
         st.divider()
