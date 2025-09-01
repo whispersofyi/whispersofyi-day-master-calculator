@@ -1,7 +1,48 @@
-# app.py - Accurate Day Master Calculator
+# app.py - Accurate Day Master Calculator with GMT Time Zones
 import streamlit as st
 import datetime
 import math
+
+# Add custom CSS for Inter font and styling
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+html, body, [class*="css"]  {
+    font-family: 'Inter', sans-serif;
+}
+
+.stApp {
+    background-color: #fafafa;
+}
+
+.stSidebar {
+    background-color: #ffffff;
+    border-right: 1px solid #eaeaea;
+}
+
+.stButton>button {
+    background-color: #000000;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.stButton>button:hover {
+    background-color: #333333;
+    color: white;
+}
+
+.metric-container {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #eaeaea;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+</style>
+""", unsafe_allow_html=True)
 
 # --- Constants and Lookup Tables ---
 JIA_ZI = [
@@ -161,7 +202,7 @@ This calculator uses **Start of Spring** for year determination and **solar term
 """)
 
 # Important notes for users
-with st.expander("ℹ️ Important Notes for Accurate Calculation", expanded=True):
+with st.expander("Important Notes for Accurate Calculation", expanded=True):
     st.write("""
     **For the most accurate Bazi calculation, please note:**
     
@@ -169,17 +210,14 @@ with st.expander("ℹ️ Important Notes for Accurate Calculation", expanded=Tru
       rather than lunar calendar dates. The year changes at **Start of Spring (立春)** 
       around February 4th, not Chinese New Year.
     
-    - **Time Zone Accuracy:** Your birth time should be converted to the **local time zone** 
-      of your birth place. Time zones have changed historically, so for births before 1970, 
-      you may need to verify the correct time zone offset.
+    - **Time Zone Accuracy:** Select the GMT time zone offset for your birth location. 
+      For example: China = GMT+8, Japan = GMT+9, California = GMT-8
     
     - **Daylight Saving Time:** If your birth occurred during Daylight Saving Time, 
       subtract 1 hour from the recorded time to get standard time.
     
     - **Hour Pillar Precision:** The hour pillar changes every 2 hours (12 two-hour periods). 
       The calculation uses your exact birth time to determine the correct hour pillar.
-    
-    - **Year Range:** Currently supports years from 1900 to present.
     """)
 
 # Input form
@@ -193,17 +231,20 @@ with st.sidebar:
         birth_day = st.number_input("Birth Day", min_value=1, max_value=31, value=1)
         
         # Time input with minutes
-        birth_hour = st.number_input("Hour (0-23)", min_value=0, max_value=23, value=12)
-        birth_minute = st.number_input("Minute (0-59)", min_value=0, max_value=59, value=0)
+        col1, col2 = st.columns(2)
+        with col1:
+            birth_hour = st.number_input("Hour (0-23)", min_value=0, max_value=23, value=12)
+        with col2:
+            birth_minute = st.number_input("Minute (0-59)", min_value=0, max_value=59, value=0)
         
-        # Time zone selection
-        time_zones = [
-            "Asia/Shanghai", "Asia/Hong_Kong", "Asia/Taipei", "Asia/Singapore",
-            "Asia/Tokyo", "Asia/Seoul", "America/New_York", "Europe/London",
-            "UTC", "Other (use local time)"
-        ]
-        time_zone = st.selectbox("Time Zone", time_zones, index=3,
-                               help="Select the time zone of your birth location")
+        # GMT Time Zone selection
+        time_zone_offset = st.selectbox("GMT Time Zone", 
+                                       ["GMT-12", "GMT-11", "GMT-10", "GMT-9", "GMT-8", "GMT-7", 
+                                        "GMT-6", "GMT-5", "GMT-4", "GMT-3", "GMT-2", "GMT-1",
+                                        "GMT+0", "GMT+1", "GMT+2", "GMT+3", "GMT+4", "GMT+5", 
+                                        "GMT+6", "GMT+7", "GMT+8", "GMT+9", "GMT+10", "GMT+11", "GMT+12"],
+                                       index=15,  # Default to GMT+8 (Asia time)
+                                       help="Select your birth location's GMT time zone offset")
         
         submitted = st.form_submit_button("Calculate Day Master", type="primary")
 
@@ -223,24 +264,32 @@ if submitted:
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
+            st.markdown('<div class="metric-container">', unsafe_allow_html=True)
             st.metric("Year Pillar", 
                      f"{pillars['year'][0]}{pillars['year'][1]}", 
                      f"{pillars['year'][2]} {pillars['year'][3]}")
+            st.markdown('</div>', unsafe_allow_html=True)
         
         with col2:
+            st.markdown('<div class="metric-container">', unsafe_allow_html=True)
             st.metric("Month Pillar", 
                      f"{pillars['month'][0]}{pillars['month'][1]}", 
                      f"{pillars['month'][2]} {pillars['month'][3]}")
+            st.markdown('</div>', unsafe_allow_html=True)
         
         with col3:
+            st.markdown('<div class="metric-container">', unsafe_allow_html=True)
             st.metric("Day Master", 
                      f"**{pillars['day'][0]}{pillars['day'][1]}**", 
                      f"**{pillars['day'][2]} {pillars['day'][3]}**")
+            st.markdown('</div>', unsafe_allow_html=True)
         
         with col4:
+            st.markdown('<div class="metric-container">', unsafe_allow_html=True)
             st.metric("Hour Pillar", 
                      f"{pillars['hour'][0]}{pillars['hour'][1]}", 
                      f"{pillars['hour'][2]} {pillars['hour'][3]}")
+            st.markdown('</div>', unsafe_allow_html=True)
         
         # Day Master interpretation
         st.divider()
@@ -271,7 +320,7 @@ if submitted:
         # Additional information
         with st.expander("Detailed Information"):
             st.write(f"**Birth Date:** {birth_dt.strftime('%Y-%m-%d %H:%M')}")
-            st.write(f"**Time Zone:** {time_zone}")
+            st.write(f"**Time Zone:** {time_zone_offset}")
             st.write(f"**Current Solar Term:** {pillars['solar_term']}")
             st.write("**Full Four Pillars:**")
             st.code(f"{pillars['year'][0]}{pillars['year'][1]} {pillars['month'][0]}{pillars['month'][1]} {pillars['day'][0]}{pillars['day'][1]} {pillars['hour'][0]}{pillars['hour'][1]}")
@@ -287,7 +336,7 @@ else:
     st.info("""
     **Instructions:**
     1. Enter your exact birth date and time (with minutes)
-    2. Select the time zone of your birth location
+    2. Select the GMT time zone of your birth location
     3. Click 'Calculate Day Master' to see your Four Pillars
     4. Your **Day Master** represents your core personality element
     """)
