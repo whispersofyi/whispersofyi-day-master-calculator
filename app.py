@@ -1,33 +1,33 @@
-# app.py - Refined Bazi Calculator
+# app.py - Accurate Day Master Calculator
 import streamlit as st
 import datetime
 import math
 
 # --- Constants and Lookup Tables ---
 JIA_ZI = [
-    ("甲", "子"), ("乙", "丑"), ("丙", "寅"), ("丁", "卯"), ("戊", "辰"),
-    ("己", "巳"), ("庚", "午"), ("辛", "未"), ("壬", "申"), ("癸", "酉"),
-    ("甲", "戌"), ("乙", "亥"), ("丙", "子"), ("丁", "丑"), ("戊", "寅"),
-    ("己", "卯"), ("庚", "辰"), ("辛", "巳"), ("壬", "午"), ("癸", "未"),
-    ("甲", "申"), ("乙", "酉"), ("丙", "戌"), ("丁", "亥"), ("戊", "子"),
-    ("己", "丑"), ("庚", "寅"), ("辛", "卯"), ("壬", "辰"), ("癸", "巳"),
-    ("甲", "午"), ("乙", "未"), ("丙", "申"), ("丁", "酉"), ("戊", "戌"),
-    ("己", "亥"), ("庚", "子"), ("辛", "丑"), ("壬", "寅"), ("癸", "卯"),
-    ("甲", "辰"), ("乙", "巳"), ("丙", "午"), ("丁", "未"), ("戊", "申"),
-    ("己", "酉"), ("庚", "戌"), ("辛", "亥"), ("壬", "子"), ("癸", "丑"),
-    ("甲", "寅"), ("乙", "卯"), ("丙", "辰"), ("丁", "巳"), ("戊", "午"),
-    ("己", "未"), ("庚", "申"), ("辛", "酉"), ("壬", "戌"), ("癸", "亥")
+    ("甲", "子", "Yang Wood", "Rat"), ("乙", "丑", "Yin Wood", "Ox"), ("丙", "寅", "Yang Fire", "Tiger"), ("丁", "卯", "Yin Fire", "Rabbit"), ("戊", "辰", "Yang Earth", "Dragon"),
+    ("己", "巳", "Yin Earth", "Snake"), ("庚", "午", "Yang Metal", "Horse"), ("辛", "未", "Yin Metal", "Goat"), ("壬", "申", "Yang Water", "Monkey"), ("癸", "酉", "Yin Water", "Rooster"),
+    ("甲", "戌", "Yang Wood", "Dog"), ("乙", "亥", "Yin Wood", "Pig"), ("丙", "子", "Yang Fire", "Rat"), ("丁", "丑", "Yin Fire", "Ox"), ("戊", "寅", "Yang Earth", "Tiger"),
+    ("己", "卯", "Yin Earth", "Rabbit"), ("庚", "辰", "Yang Metal", "Dragon"), ("辛", "巳", "Yin Metal", "Snake"), ("壬", "午", "Yang Water", "Horse"), ("癸", "未", "Yin Water", "Goat"),
+    ("甲", "申", "Yang Wood", "Monkey"), ("乙", "酉", "Yin Wood", "Rooster"), ("丙", "戌", "Yang Fire", "Dog"), ("丁", "亥", "Yin Fire", "Pig"), ("戊", "子", "Yang Earth", "Rat"),
+    ("己", "丑", "Yin Earth", "Ox"), ("庚", "寅", "Yang Metal", "Tiger"), ("辛", "卯", "Yin Metal", "Rabbit"), ("壬", "辰", "Yang Water", "Dragon"), ("癸", "巳", "Yin Water", "Snake"),
+    ("甲", "午", "Yang Wood", "Horse"), ("乙", "未", "Yin Wood", "Goat"), ("丙", "申", "Yang Fire", "Monkey"), ("丁", "酉", "Yin Fire", "Rooster"), ("戊", "戌", "Yang Earth", "Dog"),
+    ("己", "亥", "Yin Earth", "Pig"), ("庚", "子", "Yang Metal", "Rat"), ("辛", "丑", "Yin Metal", "Ox"), ("壬", "寅", "Yang Water", "Tiger"), ("癸", "卯", "Yin Water", "Rabbit"),
+    ("甲", "辰", "Yang Wood", "Dragon"), ("乙", "巳", "Yin Wood", "Snake"), ("丙", "午", "Yang Fire", "Horse"), ("丁", "未", "Yin Fire", "Goat"), ("戊", "申", "Yang Earth", "Monkey"),
+    ("己", "酉", "Yin Earth", "Rooster"), ("庚", "戌", "Yang Metal", "Dog"), ("辛", "亥", "Yin Metal", "Pig"), ("壬", "子", "Yang Water", "Rat"), ("癸", "丑", "Yin Water", "Ox"),
+    ("甲", "寅", "Yang Wood", "Tiger"), ("乙", "卯", "Yin Wood", "Rabbit"), ("丙", "辰", "Yang Fire", "Dragon"), ("丁", "巳", "Yin Fire", "Snake"), ("戊", "午", "Yang Earth", "Horse"),
+    ("己", "未", "Yin Earth", "Goat"), ("庚", "申", "Yang Metal", "Monkey"), ("辛", "酉", "Yin Metal", "Rooster"), ("壬", "戌", "Yang Water", "Dog"), ("癸", "亥", "Yin Water", "Pig")
 ]
 
 SOLAR_TERMS = [
-    (2, 4, '立春', '寅'), (2, 19, '雨水', '寅'), (3, 5, '驚蟄', '寅'),
-    (3, 20, '春分', '卯'), (4, 5, '清明', '卯'), (4, 20, '穀雨', '卯'),
-    (5, 5, '立夏', '辰'), (5, 21, '小滿', '辰'), (6, 6, '芒種', '巳'),
-    (6, 21, '夏至', '午'), (7, 7, '小暑', '午'), (7, 23, '大暑', '午'),
-    (8, 8, '立秋', '未'), (8, 23, '處暑', '未'), (9, 8, '白露', '申'),
-    (9, 23, '秋分', '申'), (10, 8, '寒露', '酉'), (10, 23, '霜降', '酉'),
-    (11, 7, '立冬', '戌'), (11, 22, '小雪', '戌'), (12, 7, '大雪', '亥'),
-    (12, 22, '冬至', '子'), (1, 6, '小寒', '丑'), (1, 20, '大寒', '丑')
+    (2, 4, '立春', '寅', 'Start of Spring'), (2, 19, '雨水', '寅', 'Rain Water'), (3, 5, '驚蟄', '寅', 'Awakening of Insects'),
+    (3, 20, '春分', '卯', 'Spring Equinox'), (4, 5, '清明', '卯', 'Qingming'), (4, 20, '穀雨', '卯', 'Grain Rain'),
+    (5, 5, '立夏', '辰', 'Start of Summer'), (5, 21, '小滿', '辰', 'Grain Full'), (6, 6, '芒種', '巳', 'Grain in Ear'),
+    (6, 21, '夏至', '午', 'Summer Solstice'), (7, 7, '小暑', '午', 'Minor Heat'), (7, 23, '大暑', '午', 'Major Heat'),
+    (8, 8, '立秋', '未', 'Start of Autumn'), (8, 23, '處暑', '未', 'End of Heat'), (9, 8, '白露', '申', 'White Dew'),
+    (9, 23, '秋分', '申', 'Autumn Equinox'), (10, 8, '寒露', '酉', 'Cold Dew'), (10, 23, '霜降', '酉', 'Frost Descent'),
+    (11, 7, '立冬', '戌', 'Start of Winter'), (11, 22, '小雪', '戌', 'Minor Snow'), (12, 7, '大雪', '亥', 'Major Snow'),
+    (12, 22, '冬至', '子', 'Winter Solstice'), (1, 6, '小寒', '丑', 'Minor Cold'), (1, 20, '大寒', '丑', 'Major Cold')
 ]
 
 HOUR_STEMS = {
@@ -76,19 +76,17 @@ def get_solar_term_month(dt):
     """Get the solar term and month branch for a given date."""
     month, day = dt.month, dt.day
     
-    for term_month, term_day, term_name, branch in SOLAR_TERMS:
+    for term_month, term_day, term_name, branch, term_english in SOLAR_TERMS:
         if month == term_month and day >= term_day:
-            # If we find a solar term that starts on or before this day
-            if month == 12 and day >= 22:  # Special case for December/January boundary
-                return term_name, branch
+            if month == 12 and day >= 22:
+                return term_name, branch, term_english
             continue
         else:
-            # Return the previous solar term
-            prev_index = (SOLAR_TERMS.index((term_month, term_day, term_name, branch)) - 1) % len(SOLAR_TERMS)
+            prev_index = (SOLAR_TERMS.index((term_month, term_day, term_name, branch, term_english)) - 1) % len(SOLAR_TERMS)
             prev_term = SOLAR_TERMS[prev_index]
-            return prev_term[2], prev_term[3]
+            return prev_term[2], prev_term[3], prev_term[4]
     
-    return SOLAR_TERMS[-1][2], SOLAR_TERMS[-1][3]  # Default to last term
+    return SOLAR_TERMS[-1][2], SOLAR_TERMS[-1][3], SOLAR_TERMS[-1][4]
 
 def get_year_stem_branch(dt):
     """Get year pillar based on Start of Spring."""
@@ -100,155 +98,196 @@ def get_year_stem_branch(dt):
     else:
         year_index = (year - 4) % 60
         
-    return JIA_ZI[year_index]
+    stem, branch, stem_english, branch_english = JIA_ZI[year_index]
+    return stem, branch, stem_english, branch_english
 
 def get_day_stem_branch(dt):
     """Calculate day pillar."""
     ref_date = datetime.datetime(1924, 1, 1, 0, 0, 0)
     delta = dt - ref_date
     day_index = delta.days % 60
-    return JIA_ZI[day_index]
+    stem, branch, stem_english, branch_english = JIA_ZI[day_index]
+    return stem, branch, stem_english, branch_english
 
 def get_month_pillar(year_stem, dt):
     """Get month pillar based on solar terms."""
-    _, month_branch = get_solar_term_month(dt)
+    _, month_branch, term_english = get_solar_term_month(dt)
     month_stem = MONTH_STEM_RULES[year_stem][month_branch]
-    return month_stem, month_branch
+    
+    # Find English names for stem and branch
+    stem_english = next((item[2] for item in JIA_ZI if item[0] == month_stem), month_stem)
+    branch_english = next((item[3] for item in JIA_ZI if item[1] == month_branch), month_branch)
+    
+    return month_stem, month_branch, stem_english, branch_english, term_english
 
-def get_hour_pillar(day_stem, hour):
-    """Get hour pillar."""
+def get_hour_pillar(day_stem, hour, minute):
+    """Get hour pillar with minute precision."""
+    # Calculate exact hour (including minutes)
+    exact_hour = hour + minute / 60.0
+    
     earthly_branches = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
-    hour_branch_index = (hour + 1) // 2 % 12
+    hour_branch_index = int((exact_hour + 1) / 2) % 12
     hour_branch = earthly_branches[hour_branch_index]
     hour_stem = HOUR_STEMS[day_stem][hour_branch_index]
-    return hour_stem, hour_branch
+    
+    # Find English names
+    stem_english = next((item[2] for item in JIA_ZI if item[0] == hour_stem), hour_stem)
+    branch_english = next((item[3] for item in JIA_ZI if item[1] == hour_branch), hour_branch)
+    
+    return hour_stem, hour_branch, stem_english, branch_english
 
 def calculate_bazi(dt):
     """Main calculation function."""
-    year_stem, year_branch = get_year_stem_branch(dt)
-    month_stem, month_branch = get_month_pillar(year_stem, dt)
-    day_stem, day_branch = get_day_stem_branch(dt)
-    hour_stem, hour_branch = get_hour_pillar(day_stem, dt.hour)
+    year_stem, year_branch, year_stem_en, year_branch_en = get_year_stem_branch(dt)
+    month_stem, month_branch, month_stem_en, month_branch_en, current_term = get_month_pillar(year_stem, dt)
+    day_stem, day_branch, day_stem_en, day_branch_en = get_day_stem_branch(dt)
+    hour_stem, hour_branch, hour_stem_en, hour_branch_en = get_hour_pillar(day_stem, dt.hour, dt.minute)
     
     return {
-        'year': (year_stem, year_branch),
-        'month': (month_stem, month_branch),
-        'day': (day_stem, day_branch),
-        'hour': (hour_stem, hour_branch)
+        'year': (year_stem, year_branch, year_stem_en, year_branch_en),
+        'month': (month_stem, month_branch, month_stem_en, month_branch_en, current_term),
+        'day': (day_stem, day_branch, day_stem_en, day_branch_en),
+        'hour': (hour_stem, hour_branch, hour_stem_en, hour_branch_en),
+        'solar_term': current_term
     }
 
 # --- Streamlit UI ---
-st.set_page_config(page_title="Accurate Bazi Calculator", page_icon="☯️", layout="wide")
+st.set_page_config(page_title="Accurate Day Master Calculator", page_icon="☯️", layout="wide")
 
-st.title("☯️ Accurate Bazi Calculator")
+st.title("Accurate Day Master Calculator")
 st.markdown("""
 Calculate your Four Pillars of Destiny (八字) based on your exact birth time and location.
-The calculator uses **Start of Spring** for year determination and **solar terms** for month accuracy.
+This calculator uses **Start of Spring** for year determination and **solar terms** for month accuracy.
 """)
+
+# Important notes for users
+with st.expander("ℹ️ Important Notes for Accurate Calculation", expanded=True):
+    st.write("""
+    **For the most accurate Bazi calculation, please note:**
+    
+    - **Solar vs Lunar Time:** This calculator uses solar time (based on the sun's position) 
+      rather than lunar calendar dates. The year changes at **Start of Spring (立春)** 
+      around February 4th, not Chinese New Year.
+    
+    - **Time Zone Accuracy:** Your birth time should be converted to the **local time zone** 
+      of your birth place. Time zones have changed historically, so for births before 1970, 
+      you may need to verify the correct time zone offset.
+    
+    - **Daylight Saving Time:** If your birth occurred during Daylight Saving Time, 
+      subtract 1 hour from the recorded time to get standard time.
+    
+    - **Hour Pillar Precision:** The hour pillar changes every 2 hours (12 two-hour periods). 
+      The calculation uses your exact birth time to determine the correct hour pillar.
+    
+    - **Year Range:** Currently supports years from 1900 to present.
+    """)
 
 # Input form
 with st.sidebar:
     st.header("Birth Information")
     with st.form("birth_form"):
-        birth_date = st.date_input("Birth Date", datetime.date(1990, 1, 1), 
-                                 help="Enter your exact date of birth")
-        birth_time = st.time_input("Birth Time", datetime.time(12, 0),
-                                 help="Enter your exact time of birth")
+        # Year range from 1900 to current year
+        current_year = datetime.datetime.now().year
+        birth_year = st.number_input("Birth Year", min_value=1900, max_value=current_year, value=1990)
+        birth_month = st.number_input("Birth Month", min_value=1, max_value=12, value=1)
+        birth_day = st.number_input("Birth Day", min_value=1, max_value=31, value=1)
+        
+        # Time input with minutes
+        birth_hour = st.number_input("Hour (0-23)", min_value=0, max_value=23, value=12)
+        birth_minute = st.number_input("Minute (0-59)", min_value=0, max_value=59, value=0)
         
         # Time zone selection
         time_zones = [
             "Asia/Shanghai", "Asia/Hong_Kong", "Asia/Taipei", "Asia/Singapore",
-            "Asia/Tokyo", "Asia/Seoul", "America/New_York", "Europe/London"
+            "Asia/Tokyo", "Asia/Seoul", "America/New_York", "Europe/London",
+            "UTC", "Other (use local time)"
         ]
         time_zone = st.selectbox("Time Zone", time_zones, index=3,
                                help="Select the time zone of your birth location")
         
-        submitted = st.form_submit_button("Calculate Bazi", type="primary")
+        submitted = st.form_submit_button("Calculate Day Master", type="primary")
 
 # Main content area
 if submitted:
     try:
-        # Create datetime object with timezone awareness (simplified)
-        birth_dt = datetime.datetime.combine(birth_date, birth_time)
+        # Create datetime object
+        birth_dt = datetime.datetime(birth_year, birth_month, birth_day, birth_hour, birth_minute)
         
         # Calculate Bazi
         pillars = calculate_bazi(birth_dt)
         
         # Display results
-        st.success("🎉 Bazi Calculation Complete!")
+        st.success("Calculation Complete!")
         
-        # Create a nice display
+        # Create a nice display with both Chinese and English
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            st.metric("Year Pillar", f"{pillars['year'][0]}{pillars['year'][1]}", 
-                     help="Represents your ancestry and early life environment")
+            st.metric("Year Pillar", 
+                     f"{pillars['year'][0]}{pillars['year'][1]}", 
+                     f"{pillars['year'][2]} {pillars['year'][3]}")
         
         with col2:
-            st.metric("Month Pillar", f"{pillars['month'][0]}{pillars['month'][1]}", 
-                     help="Represents your parents and career path")
+            st.metric("Month Pillar", 
+                     f"{pillars['month'][0]}{pillars['month'][1]}", 
+                     f"{pillars['month'][2]} {pillars['month'][3]}")
         
         with col3:
-            st.metric("Day Master", f"**{pillars['day'][0]}{pillars['day'][1]}**", 
-                     help="Represents YOU - your core personality and self")
+            st.metric("Day Master", 
+                     f"**{pillars['day'][0]}{pillars['day'][1]}**", 
+                     f"**{pillars['day'][2]} {pillars['day'][3]}**")
         
         with col4:
-            st.metric("Hour Pillar", f"{pillars['hour'][0]}{pillars['hour'][1]}", 
-                     help="Represents your children and later life")
+            st.metric("Hour Pillar", 
+                     f"{pillars['hour'][0]}{pillars['hour'][1]}", 
+                     f"{pillars['hour'][2]} {pillars['hour'][3]}")
         
         # Day Master interpretation
         st.divider()
         st.subheader("Your Day Master Analysis")
         
         day_master_info = {
-            "甲": {"name": "Yang Wood (甲)", "symbol": "🌳", "traits": "The Big Tree - Strong, upright, reliable, leadership qualities"},
-            "乙": {"name": "Yin Wood (乙)", "symbol": "🌿", "traits": "Flowers & Grass - Flexible, adaptable, creative, gentle"},
-            "丙": {"name": "Yang Fire (丙)", "symbol": "☀️", "traits": "The Sun - Warm, generous, charismatic, enthusiastic"},
-            "丁": {"name": "Yin Fire (丁)", "symbol": "🕯️", "traits": "Lamp Flame - Intelligent, precise, spiritual, focused"},
-            "戊": {"name": "Yang Earth (戊)", "symbol": "⛰️", "traits": "Mountain - Stable, dependable, practical, conservative"},
-            "己": {"name": "Yin Earth (己)", "symbol": "🌾", "traits": "Garden Soil - Nurturing, diplomatic, practical, adaptable"},
-            "庚": {"name": "Yang Metal (庚)", "symbol": "⚔️", "traits": "Metal - Strong-willed, decisive, principled, direct"},
-            "辛": {"name": "Yin Metal (辛)", "symbol": "💎", "traits": "Jewelry - Refined, precise, aesthetic, detail-oriented"},
-            "壬": {"name": "Yang Water (壬)", "symbol": "🌊", "traits": "Ocean - Wise, adaptable, resourceful, flowing"},
-            "癸": {"name": "Yin Water (癸)", "symbol": "💧", "traits": "Rain - Intuitive, sensitive, diplomatic, nurturing"}
+            "甲": {"name": "Yang Wood", "traits": "The Big Tree - Strong, upright, reliable, natural leadership qualities, stable and dependable"},
+            "乙": {"name": "Yin Wood", "traits": "Flowers & Grass - Flexible, adaptable, creative, gentle, diplomatic, good at networking"},
+            "丙": {"name": "Yang Fire", "traits": "The Sun - Warm, generous, charismatic, enthusiastic, optimistic, loves attention and recognition"},
+            "丁": {"name": "Yin Fire", "traits": "Lamp Flame - Intelligent, precise, spiritual, focused, detail-oriented, good at research and analysis"},
+            "戊": {"name": "Yang Earth", "traits": "Mountain - Stable, dependable, practical, conservative, responsible, good with finances"},
+            "己": {"name": "Yin Earth", "traits": "Garden Soil - Nurturing, diplomatic, practical, adaptable, good at supporting others, patient"},
+            "庚": {"name": "Yang Metal", "traits": "Metal - Strong-willed, decisive, principled, direct, competitive, natural reformers"},
+            "辛": {"name": "Yin Metal", "traits": "Jewelry - Refined, precise, aesthetic, detail-oriented, perfectionist, values quality"},
+            "壬": {"name": "Yang Water", "traits": "Ocean - Wise, adaptable, resourceful, flowing, philosophical, good communicators"},
+            "癸": {"name": "Yin Water", "traits": "Rain - Intuitive, sensitive, diplomatic, nurturing, compassionate, good at understanding emotions"}
         }
         
         day_master = pillars['day'][0]
         if day_master in day_master_info:
             info = day_master_info[day_master]
             st.info(f"""
-            **{info['symbol']} Your Day Master is {info['name']}**
+            **Your Day Master is {info['name']}**
             
             *{info['traits']}*
             """)
-        else:
-            st.warning("Could not interpret Day Master")
         
         # Additional information
-        with st.expander("📋 Detailed Pillar Information"):
-            st.write(f"**Birth Date:** {birth_date}")
-            st.write(f"**Birth Time:** {birth_time}")
+        with st.expander("Detailed Information"):
+            st.write(f"**Birth Date:** {birth_dt.strftime('%Y-%m-%d %H:%M')}")
             st.write(f"**Time Zone:** {time_zone}")
+            st.write(f"**Current Solar Term:** {pillars['solar_term']}")
             st.write("**Full Four Pillars:**")
             st.code(f"{pillars['year'][0]}{pillars['year'][1]} {pillars['month'][0]}{pillars['month'][1]} {pillars['day'][0]}{pillars['day'][1]} {pillars['hour'][0]}{pillars['hour'][1]}")
+            st.write("**English Translation:**")
+            st.code(f"{pillars['year'][2]} {pillars['year'][3]} | {pillars['month'][2]} {pillars['month'][3]} | {pillars['day'][2]} {pillars['day'][3]} | {pillars['hour'][2]} {pillars['hour'][3]}")
         
     except Exception as e:
-        st.error(f"❌ Error in calculation: {str(e)}")
-        st.info("Please check your input and try again. If the problem persists, try a different date.")
+        st.error(f"Error in calculation: {str(e)}")
+        st.info("Please check your input and try again. Ensure the date is valid (e.g., not February 30th).")
 
 else:
     # Show instructions when no calculation has been done
     st.info("""
     **Instructions:**
-    1. Enter your exact birth date and time
+    1. Enter your exact birth date and time (with minutes)
     2. Select the time zone of your birth location
-    3. Click 'Calculate Bazi' to see your Four Pillars
-    4. Your **Day Master** represents your core personality
+    3. Click 'Calculate Day Master' to see your Four Pillars
+    4. Your **Day Master** represents your core personality element
     """)
-    
-    # Example calculation
-    st.divider()
-    st.subheader("Example Calculation")
-    example_dt = datetime.datetime(1974, 12, 26, 1, 20)
-    example_pillars = calculate_bazi(example_dt)
-    st.write(f"**December 26, 1974, 1:20 AM:** `{example_pillars['year'][0]}{example_pillars['year'][1]} {example_pillars['month'][0]}{example_pillars['month'][1]} {example_pillars['day'][0]}{example_pillars['day'][1]} {example_pillars['hour'][0]}{example_pillars['hour'][1]}`")
