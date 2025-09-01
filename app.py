@@ -576,5 +576,5 @@ else:
         "- The Day Master (Heavenly Stem of the day) with an in-depth personality/trait breakdown\n"
         "- Technical Julian-date diagnostics in the expander"
     )
-    st.info("This app uses Streamlit-native components for stability and the font is set to a sans-serif stack for visual consistency.")
-    st.caption("“The flame flickers in wind, but never forgets it burns.” — Understanding your Day Master is understanding the element that never changes within you")
+    st.info(“The sky does not share the same hour everywhere — this calculator adjusts so your moment is true.”)
+    st.caption(“To know your Day Master is to glimpse the element that stays unchanged.”)
