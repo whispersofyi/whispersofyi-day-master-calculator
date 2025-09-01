@@ -4,249 +4,11 @@ import datetime
 import calendar
 import math
 
-# Page configuration
-st.set_page_config(
-    page_title="Day Master Calculator - Whispers of YI",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# --- CSS styling (kept from your aesthetic) ---
-st.markdown("""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
-
-/* Global styles */
-.stApp {
-    background-color: #fafafa;
-    font-family: 'Inter', sans-serif;
-}
-
-/* Typography */
-h1, h2, h3 {
-    font-family: 'Crimson Text', serif;
-    color: #2c3e50;
-}
-
-h1 {
-    font-size: 2.5rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    text-align: center;
-    border-bottom: 1px solid #e8e8e8;
-    padding-bottom: 1rem;
-}
-
-.subtitle {
-    font-style: italic;
-    color: #6c757d;
-    text-align: center;
-    margin-bottom: 2rem;
-    font-size: 1.1rem;
-    line-height: 1.6;
-}
-
-/* Sidebar styling */
-.stSidebar {
-    background-color: #ffffff;
-    border-right: 1px solid #e8e8e8;
-    box-shadow: 0 0 10px rgba(0,0,0,0.05);
-}
-
-.stSidebar .stSelectbox label,
-.stSidebar .stNumberInput label {
-    font-weight: 500;
-    color: #495057;
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-}
-
-/* Form elements */
-.stSelectbox > div > div,
-.stNumberInput > div > div > input {
-    background-color: #ffffff;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    color: #495057;
-}
-
-.stSelectbox > div > div:focus-within,
-.stNumberInput > div > div > input:focus {
-    border-color: #6c757d;
-    box-shadow: 0 0 0 0.1rem rgba(108, 117, 125, 0.25);
-}
-
-/* Button styling */
-.stButton > button {
-    background-color: #495057;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 0.75rem 2rem;
-    font-weight: 500;
-    width: 100%;
-    transition: all 0.2s ease;
-}
-
-.stButton > button:hover {
-    background-color: #343a40;
-    transform: translateY(-1px);
-}
-
-/* Content containers */
-.result-container {
-    background-color: #ffffff;
-    border-radius: 8px;
-    padding: 2rem;
-    margin: 1rem 0;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    border-left: 4px solid #6c757d;
-}
-
-.day-master-header {
-    text-align: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #e8e8e8;
-}
-
-.day-master-title {
-    font-size: 2rem;
-    color: #2c3e50;
-    margin-bottom: 0.5rem;
-    font-family: 'Crimson Text', serif;
-}
-
-.day-master-element {
-    font-size: 1.2rem;
-    color: #6c757d;
-    font-weight: 300;
-}
-
-.description-text {
-    line-height: 1.8;
-    color: #495057;
-    margin-bottom: 2rem;
-    font-size: 1.1rem;
-    text-align: justify;
-}
-
-/* Trait sections */
-.trait-section {
-    margin: 1.5rem 0;
-    background-color: #f8f9fa;
-    border-radius: 6px;
-    padding: 1.5rem;
-}
-
-.trait-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #2c3e50;
-    margin-bottom: 1rem;
-    font-family: 'Crimson Text', serif;
-}
-
-.trait-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.trait-item {
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #e9ecef;
-    color: #495057;
-    line-height: 1.6;
-}
-
-.trait-item:last-child {
-    border-bottom: none;
-}
-
-/* Four Pillars display */
-.pillars-container {
-    display: flex;
-    justify-content: space-between;
-    margin: 2rem 0;
-    gap: 1rem;
-}
-
-.pillar-card {
-    flex: 1;
-    background-color: #ffffff;
-    border: 1px solid #e8e8e8;
-    border-radius: 6px;
-    padding: 1rem;
-    text-align: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.pillar-title {
-    font-size: 0.9rem;
-    color: #6c757d;
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.pillar-content {
-    font-size: 1.5rem;
-    color: #2c3e50;
-    font-weight: 600;
-    margin-bottom: 0.25rem;
-}
-
-.pillar-description {
-    font-size: 0.85rem;
-    color: #6c757d;
-}
-
-/* Instructions */
-.instructions {
-    background-color: #e7f3ff;
-    border: 1px solid #b8daff;
-    border-radius: 6px;
-    padding: 1.5rem;
-    margin: 2rem 0;
-    color: #004085;
-}
-
-/* Error and success messages */
-.error-message {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-    border-radius: 4px;
-    padding: 1rem;
-    margin: 1rem 0;
-}
-
-.success-message {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-    border-radius: 4px;
-    padding: 1rem;
-    margin: 1rem 0;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-    .pillars-container {
-        flex-direction: column;
-    }
-    
-    h1 {
-        font-size: 2rem;
-    }
-}
-</style>
-""", unsafe_allow_html=True)
+# Page config
+st.set_page_config(page_title="Day Master Calculator - Whispers of YI", layout="wide")
 
 # ----------------------
-# Complete Day Master database (all 10 stems)
+# Day Master data (all 10 stems)
 # ----------------------
 DAY_MASTER_DATA = {
     "甲": {
@@ -572,357 +334,213 @@ DAY_MASTER_DATA = {
 }
 
 # ----------------------
-# Validation
+# Simple validation
 # ----------------------
 def validate_input(year, month, day, hour, minute):
-    """Validate user input and return error message if invalid"""
     current_year = datetime.datetime.now().year
-
     if not (1900 <= year <= current_year):
         return f"Year must be between 1900 and {current_year}"
-
     if not (1 <= month <= 12):
         return "Month must be between 1 and 12"
-
     try:
         max_day = calendar.monthrange(year, month)[1]
         if not (1 <= day <= max_day):
             return f"Day must be between 1 and {max_day} for {calendar.month_name[month]}"
     except:
         return "Invalid month/year combination"
-
     if not (0 <= hour <= 23):
         return "Hour must be between 0 and 23"
-
     if not (0 <= minute <= 59):
         return "Minute must be between 0 and 59"
-
     return None
 
 # ----------------------
-# Astronomical helpers
-# ----------------------
-def gregorian_to_julian_date(year, month, day, hour=0, minute=0, second=0):
-    """
-    Convert a Gregorian UTC date/time to Julian Date (JD).
-    Algorithm valid for Gregorian calendar dates (i.e. after 1582-10-15).
-    Returns JD as a float (JD starts at noon).
-    """
-    # Fractional day from time
-    day_fraction = (hour + minute / 60.0 + second / 3600.0) / 24.0
-
-    Y = year
-    M = month
-    D = day + day_fraction
-
-    if M <= 2:
-        Y -= 1
-        M += 12
-
-    A = Y // 100
-    B = 2 - A + (A // 4)
-
-    # Integer floor operations as in standard JD formula
-    jd_int = math.floor(365.25 * (Y + 4716)) + math.floor(30.6001 * (M + 1)) + D + B - 1524.5
-    return jd_int
-
-def julian_day_number_at_noon(jd):
-    """
-    Given JD (which has fractional part), return the Julian Day Number corresponding
-    to the noon-based integer as described in the sexagenary cycle source.
-    JD noon integers are JD values for the day's noon; equivalently floor(jd + 0.5).
-    """
-    return int(math.floor(jd + 0.5))
-
-# ----------------------
-# Sexagenary / Day Master computation
+# Julian / sexagenary helpers
 # ----------------------
 HEAVENLY_STEMS = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
 EARTHLY_BRANCHES = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"]
 
+def gregorian_to_julian_date(year, month, day, hour=0, minute=0, second=0):
+    """Return JD as float (Gregorian calendar)"""
+    day_fraction = (hour + minute/60.0 + second/3600.0) / 24.0
+    Y = year
+    M = month
+    D = day + day_fraction
+    if M <= 2:
+        Y -= 1
+        M += 12
+    A = Y // 100
+    B = 2 - A + (A // 4)
+    jd = math.floor(365.25 * (Y + 4716)) + math.floor(30.6001 * (M + 1)) + D + B - 1524.5
+    return jd
+
+def julian_day_number_at_noon(jd):
+    """Integer JD at noon for sexagenary calculation"""
+    return int(math.floor(jd + 0.5))
+
 def calculate_day_master_from_utc(dt_utc):
-    """
-    Compute the Day Master (Heavenly Stem) for a birth moment given in UTC.
-    Uses Julian Date -> JDN_at_noon -> formulas from sexagenary-cycle documentation:
-      T (stem index 1..10) = 1 + mod(JD_noon - 1, 10)
-      B (branch index 1..12) = 1 + mod(JD_noon + 1, 12)
-    We return the 1-character stem (e.g. '甲').
-    """
     jd = gregorian_to_julian_date(dt_utc.year, dt_utc.month, dt_utc.day, dt_utc.hour, dt_utc.minute, dt_utc.second)
     jd_noon = julian_day_number_at_noon(jd)
-    # Heavenly stem index (0-based)
-    stem_idx = ( (jd_noon - 1) % 10 )
-    # Earthly branch index for day (0-based)
-    branch_idx = ( (jd_noon + 1) % 12 )
+    stem_idx = ((jd_noon - 1) % 10)
+    branch_idx = ((jd_noon + 1) % 12)
     return HEAVENLY_STEMS[stem_idx], EARTHLY_BRANCHES[branch_idx], jd, jd_noon
 
-# ----------------------
-# Four pillars generation (improved for day pillar using JD)
-# ----------------------
 def create_four_pillars_from_utc(dt_utc):
-    """
-    Generate a simplified set of four pillars, using:
-      - Year pillar computed from Gregorian year (approximate: uses (year - 3) mod 60 mapping for stem/branch)
-      - Month pillar left as simplified (month mapping approximated; true month requires solar-term boundary)
-      - Day pillar computed via Julian Day Number (JD_noon) for greater accuracy
-      - Hour pillar derives stem from day-stem + hour-slot rule (simplified approach)
-    Note: For production-grade BaZi you'd also convert to solar terms and local longitude/time.
-    """
-    # Year stem/branch (approximate mapping using year -> sexagenary year for the "Chinese year in that Gregorian year")
+    # Year pillar approximation
     year_num = dt_utc.year
-    # According to common formula for sexagenary year: sexagenary_index = (year - 3) % 60 (1..60)
-    sexagenary_year_index = (year_num - 3) % 60  # 0..59
-    # Map to stems/branches for year:
+    sexagenary_year_index = (year_num - 3) % 60
     year_stem = HEAVENLY_STEMS[sexagenary_year_index % 10]
     year_branch = EARTHLY_BRANCHES[sexagenary_year_index % 12]
-
-    # Month stem/branch — simplified: month_branch is month-1 index; month_stem tries to align by month and year-stem
+    # Month pillar approximation
     month_branch = EARTHLY_BRANCHES[(dt_utc.month - 1) % 12]
-    # Month stem approximate relationship: first month of a Jia/Ji year is 丙 (index 2)
-    # We'll use: month_stem_index = ( (HEAVENLY_STEMS.index(year_stem) + 2) + (dt_utc.month - 1) ) % 10
     month_stem_index = (HEAVENLY_STEMS.index(year_stem) + 2 + (dt_utc.month - 1)) % 10
     month_stem = HEAVENLY_STEMS[month_stem_index]
-
-    # Day pillar using Julian day (more accurate)
+    # Day pillar (more accurate)
     day_stem, day_branch, jd, jd_noon = calculate_day_master_from_utc(dt_utc)
-
-    # Hour pillar: map 24-hour to 12 double-hours: 23-0 => 子, 1-2 => 丑, 3-4 => 寅, ..., 21-22 => 亥
-    hour_slot = (dt_utc.hour + 1) // 2  # 0..11 where 0 => 子 slot (23-0)
+    # Hour pillar mapping (double-hours)
+    hour_slot = (dt_utc.hour + 1) // 2  # 0..11 mapping to 子..亥
     hour_branch = EARTHLY_BRANCHES[hour_slot % 12]
-    # Hour stem: correlated to day stem: stem_index_for_hour = (HEAVENLY_STEMS.index(day_stem) + hour_slot) % 10
     hour_stem = HEAVENLY_STEMS[(HEAVENLY_STEMS.index(day_stem) + hour_slot) % 10]
-
     return {
-        'year': f"{year_stem}{year_branch}",
-        'month': f"{month_stem}{month_branch}",
-        'day': f"{day_stem}{day_branch}",
-        'hour': f"{hour_stem}{hour_branch}",
-        'day_master': day_stem,
-        'jd': jd,
-        'jd_noon': jd_noon
+        "year": f"{year_stem}{year_branch}",
+        "month": f"{month_stem}{month_branch}",
+        "day": f"{day_stem}{day_branch}",
+        "hour": f"{hour_stem}{hour_branch}",
+        "day_master": day_stem,
+        "jd": jd,
+        "jd_noon": jd_noon
     }
 
-# ----------------------
-# Main application UI
-# ----------------------
-st.markdown('<h1>Day Master Calculator</h1>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">A quiet voice in the scrollstorm — discover your elemental nature through the ancient wisdom of BaZi</div>', unsafe_allow_html=True)
-
-# Sidebar for input
-with st.sidebar:
-    st.header("Birth Information")
-
-    with st.form("birth_form"):
-        current_year = datetime.datetime.now().year
-
-        birth_year = st.number_input("Birth Year",
-                                   min_value=1900,
-                                   max_value=current_year,
-                                   value=1990)
-
-        birth_month = st.number_input("Birth Month",
-                                    min_value=1,
-                                    max_value=12,
-                                    value=1)
-
-        birth_day = st.number_input("Birth Day",
-                                  min_value=1,
-                                  max_value=31,
-                                  value=1)
-
-        col1, col2 = st.columns(2)
-        with col1:
-            birth_hour = st.number_input("Hour",
-                                       min_value=0,
-                                       max_value=23,
-                                       value=12)
-        with col2:
-            birth_minute = st.number_input("Minute",
-                                         min_value=0,
-                                         max_value=59,
-                                         value=0)
-
-        timezone_options = [f"GMT{'+' if i >= 0 else ''}{i}" for i in range(-12, 13)]
-        # default index for GMT+8 (Malaysia)
-        default_index = timezone_options.index("GMT+8") if "GMT+8" in timezone_options else 0
-        selected_timezone = st.selectbox("Time Zone", timezone_options, index=default_index)
-
-        submit_button = st.form_submit_button("Calculate Day Master")
-
-# Helper: parse timezone string like "GMT+8" -> int offset_hours = +8
 def parse_gmt_offset(tz_str):
-    # Expect tz_str like "GMT+8" or "GMT-5"
     try:
         if tz_str.startswith("GMT"):
-            offset = int(tz_str[3:])
-            return offset
+            return int(tz_str[3:])
     except:
         pass
     return 0
 
-# Main content area
-if submit_button:
-    # Validate input
-    error_message = validate_input(birth_year, birth_month, birth_day, birth_hour, birth_minute)
+# ----------------------
+# UI - Native Streamlit (no raw HTML)
+# ----------------------
+st.title("Day Master Calculator")
+st.caption("A quiet voice in the scrollstorm — discover your elemental nature through the ancient wisdom of BaZi")
 
-    if error_message:
-        st.markdown(f'<div class="error-message">{error_message}</div>', unsafe_allow_html=True)
+with st.sidebar:
+    st.header("Birth Information")
+    with st.form("birth_form"):
+        current_year = datetime.datetime.now().year
+        birth_year = st.number_input("Birth Year", min_value=1900, max_value=current_year, value=1990)
+        birth_month = st.number_input("Birth Month", min_value=1, max_value=12, value=1)
+        birth_day = st.number_input("Birth Day", min_value=1, max_value=31, value=1)
+        col1, col2 = st.columns(2)
+        with col1:
+            birth_hour = st.number_input("Hour (0-23)", min_value=0, max_value=23, value=12)
+        with col2:
+            birth_minute = st.number_input("Minute (0-59)", min_value=0, max_value=59, value=0)
+        timezone_options = [f"GMT{'+' if i >= 0 else ''}{i}" for i in range(-12, 13)]
+        default_index = timezone_options.index("GMT+8") if "GMT+8" in timezone_options else 0
+        selected_timezone = st.selectbox("Time Zone", timezone_options, index=default_index)
+        submit_button = st.form_submit_button("Calculate Day Master")
+
+if submit_button:
+    err = validate_input(birth_year, birth_month, birth_day, birth_hour, birth_minute)
+    if err:
+        st.error(err)
     else:
         try:
-            # Construct naive local datetime as user entered for that GMT zone
             local_dt = datetime.datetime(birth_year, birth_month, birth_day, birth_hour, birth_minute, 0)
-
-            # Convert selected timezone into UTC by subtracting offset hours
-            tz_offset = parse_gmt_offset(selected_timezone)  # e.g. GMT+8 -> 8
-            # So UTC = local_dt - offset
+            tz_offset = parse_gmt_offset(selected_timezone)
             dt_utc = local_dt - datetime.timedelta(hours=tz_offset)
 
-            # Calculate pillars with improved day computation (uses dt_utc for JD calc)
             pillars = create_four_pillars_from_utc(dt_utc)
-            day_master_key = pillars['day_master']
+            day_master_key = pillars["day_master"]
             day_master_info = DAY_MASTER_DATA.get(day_master_key)
 
-            # Success message
-            st.markdown('<div class="success-message">Your Day Master has been calculated successfully</div>', unsafe_allow_html=True)
+            st.success("Day Master calculated successfully")
 
-            # Four Pillars display
-            st.markdown("""
-            <div class="pillars-container">
-                <div class="pillar-card">
-                    <div class="pillar-title">Year Pillar</div>
-                    <div class="pillar-content">{}</div>
-                    <div class="pillar-description">Ancestry & Foundation</div>
-                </div>
-                <div class="pillar-card">
-                    <div class="pillar-title">Month Pillar</div>
-                    <div class="pillar-content">{}</div>
-                    <div class="pillar-description">Career & Relationships</div>
-                </div>
-                <div class="pillar-card">
-                    <div class="pillar-title">Day Pillar</div>
-                    <div class="pillar-content">{}</div>
-                    <div class="pillar-description">Self & Spouse</div>
-                </div>
-                <div class="pillar-card">
-                    <div class="pillar-title">Hour Pillar</div>
-                    <div class="pillar-content">{}</div>
-                    <div class="pillar-description">Children & Legacy</div>
-                </div>
-            </div>
-            """.format(pillars['year'], pillars['month'], pillars['day'], pillars['hour']),
-            unsafe_allow_html=True)
+            # Four pillars display using native columns
+            c1, c2, c3, c4 = st.columns(4)
+            c1.subheader("Year Pillar")
+            c1.markdown(f"**{pillars['year']}**")
+            c1.caption("Ancestry & Foundation")
 
-            # Day Master Analysis (if we have the data; otherwise show fallback)
+            c2.subheader("Month Pillar")
+            c2.markdown(f"**{pillars['month']}**")
+            c2.caption("Career & Relationships")
+
+            c3.subheader("Day Pillar")
+            c3.markdown(f"**{pillars['day']}**")
+            c3.caption("Self & Spouse")
+
+            c4.subheader("Hour Pillar")
+            c4.markdown(f"**{pillars['hour']}**")
+            c4.caption("Children & Legacy")
+
+            st.markdown("---")
+
+            # Day Master analysis
             if day_master_info:
-                st.markdown(f"""
-                <div class="result-container">
-                    <div class="day-master-header">
-                        <div class="day-master-title">{day_master_info['name']}</div>
-                        <div class="day-master-element">{day_master_info['element']} ({day_master_key})</div>
-                    </div>
+                st.header(f"{day_master_info['name']} — {day_master_key} ({day_master_info['element']})")
+                st.write(day_master_info["description"])
 
-                    <div class="description-text">
-                        {day_master_info['description']}
-                    </div>
+                st.subheader("Natural Strengths & Positive Traits")
+                st.markdown("\n".join([f"- {t}" for t in day_master_info["positive_traits"]]))
 
-                    <div class="trait-section">
-                        <div class="trait-title">Natural Strengths & Positive Traits</div>
-                        <div class="trait-list">
-                            {''.join([f'<div class="trait-item">{trait}</div>' for trait in day_master_info['positive_traits']])}
-                        </div>
-                    </div>
+                st.subheader("Growth Areas & Potential Challenges")
+                st.markdown("\n".join([f"- {t}" for t in day_master_info["challenges"]]))
 
-                    <div class="trait-section">
-                        <div class="trait-title">Growth Areas & Potential Challenges</div>
-                        <div class="trait-list">
-                            {''.join([f'<div class="trait-item">{trait}</div>' for trait in day_master_info['challenges']])}
-                        </div>
-                    </div>
+                st.subheader("Elemental Harmony & Compatibility")
+                st.write(day_master_info["compatibility"])
 
-                    <div class="trait-section">
-                        <div class="trait-title">Elemental Harmony & Compatibility</div>
-                        <div class="description-text">
-                            {day_master_info['compatibility']}
-                        </div>
-                    </div>
+                st.subheader("Career Paths & Life Direction")
+                st.write(day_master_info["career_paths"])
 
-                    <div class="trait-section">
-                        <div class="trait-title">Career Paths & Life Direction</div>
-                        <div class="description-text">
-                            {day_master_info['career_paths']}
-                        </div>
-                    </div>
-
-                    <div class="trait-section">
-                        <div class="trait-title">Life Philosophy & Core Values</div>
-                        <div class="description-text">
-                            {day_master_info['life_philosophy']}
-                        </div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.subheader("Life Philosophy & Core Values")
+                st.write(day_master_info["life_philosophy"])
             else:
-                st.markdown('<div class="error-message">Day Master data unavailable for computed stem.</div>', unsafe_allow_html=True)
+                st.error("Day Master data not available for computed stem.")
 
-            # Additional birth information & technical details
+            # Technical expander (plain text, no HTML)
             with st.expander("Birth Details & Technical Information"):
-                # Show local input time and computed UTC time clearly
-                st.write(f"**Complete Birth Information (as entered):**")
-                st.write(f"Local Date: {local_dt.strftime('%B %d, %Y')}")
-                st.write(f"Local Time: {local_dt.strftime('%H:%M')} ({selected_timezone})")
-                st.write(f"**Converted to UTC for calculation:** {dt_utc.strftime('%Y-%m-%d %H:%M')} (UTC)")
-
-                st.write("**Four Pillars (simplified / solar approximation):**")
-                st.write(f"{pillars['year']}  {pillars['month']}  {pillars['day']}  {pillars['hour']}")
-                st.write(f"**Day Master Element:** {day_master_key} ({day_master_info['name'] if day_master_info else 'Unknown'})")
+                st.write("**Entered (local) birth:**")
+                st.write(f"- Date: {local_dt.strftime('%Y-%m-%d')}")
+                st.write(f"- Time: {local_dt.strftime('%H:%M')} ({selected_timezone})")
                 st.write("")
-                st.write("**Julian Date (used for day computation):**")
-                st.write(f"JD (with fraction): {pillars['jd']:.6f}")
-                st.write(f"JD Noon (integer used): {pillars['jd_noon']}")
+                st.write("**Converted to UTC for calculation:**")
+                st.write(f"- UTC: {dt_utc.strftime('%Y-%m-%d %H:%M')} (UTC)")
+
+                st.write("")
+                st.write("**Four Pillars (simplified / approximate):**")
+                st.write(f"- Year: {pillars['year']}")
+                st.write(f"- Month: {pillars['month']}")
+                st.write(f"- Day: {pillars['day']}")
+                st.write(f"- Hour: {pillars['hour']}")
+
+                st.write("")
+                st.write("**Julian info used for Day Stem calculation:**")
+                st.write(f"- JD (fractional): {pillars['jd']:.6f}")
+                st.write(f"- JD noon integer: {pillars['jd_noon']}")
 
                 st.markdown("---")
-                st.write("**Important Note:** This calculator uses improved Julian-day-based formulas to determine the Day Stem (the Day Master).")
-                st.write("""
-                For professional BaZi readings, a full pipeline should:
-                  * convert birth time to **local apparent solar time** (longitude-based)
-                  * use **solar terms** (立春 etc.) to determine correct month/year boundaries
-                  * consider exact geographical location and astronomical ephemeris
-                This tool improves over naive day-offset methods but is still a simplified, educational calculator.
-                """)
+                st.info(
+                    "Note: This tool improves day-stem accuracy by using Julian-Day-based calculations and UTC. "
+                    "For full professional BaZi accuracy you'd convert to local apparent solar time (longitude) and apply solar-term boundaries (立春, etc.)."
+                )
 
         except Exception as e:
-            st.markdown(f'<div class="error-message">An error occurred during calculation: {e}</div>', unsafe_allow_html=True)
+            st.error(f"An error occurred during calculation: {e}")
 
 else:
-    # Instructions when no calculation has been performed
-    st.markdown("""
-    <div class="instructions">
-        <h3>How to Use This Calculator</h3>
-        <p>Enter your complete birth information in the sidebar to discover your Day Master - the core element that represents your essential nature according to BaZi astrology.</p>
+    # Instructional home view
+    st.subheader("How to use")
+    st.write("Enter your exact birth date and time (including minutes) in the sidebar, select the GMT offset for the birth location, then click 'Calculate Day Master'.")
+    st.write("")
+    st.write("What you'll get:")
+    st.markdown(
+        "- A Four Pillars (simplified) overview\n"
+        "- The Day Master (Heavenly Stem of the day) with an in-depth personality/trait breakdown\n"
+        "- Technical Julian-date diagnostics in the expander"
+    )
+    st.info("This app avoids raw HTML rendering and uses Streamlit-native presentation to ensure consistent behavior on Streamlit Cloud.")
+    st.caption("“The flame flickers in wind, but never forgets it burns.” — Understanding your Day Master is understanding the element that never changes within you.")
 
-        <p><strong>What You'll Discover:</strong></p>
-        <ul>
-            <li>Your Four Pillars of Destiny with detailed explanations</li>
-            <li>Comprehensive Day Master analysis with personality insights</li>
-            <li>Natural strengths and growth opportunities</li>
-            <li>Compatible elements and relationship dynamics</li>
-            <li>Career paths aligned with your elemental nature</li>
-            <li>Core life philosophy and values</li>
-        </ul>
-
-        <p><strong>For Best Results:</strong></p>
-        <ul>
-            <li>Use your exact birth time including minutes if known</li>
-            <li>Select the correct time zone for your birth location</li>
-            <li>Remember that BaZi uses solar time, not standard time — this calculator uses UTC + Julian Date logic to produce a reliable Day Master, but professional readings use additional astronomical corrections.</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Quote in the style of your website
-    st.markdown("""
-    <div style="text-align: center; margin: 3rem 0; font-style: italic; color: #6c757d; font-size: 1.1rem; line-height: 1.6;">
-        "The flame flickers in wind, but never forgets it burns."<br>
-        <small>— Understanding your Day Master is understanding the element that never changes within you</small>
-    </div>
-    """, unsafe_allow_html=True)
