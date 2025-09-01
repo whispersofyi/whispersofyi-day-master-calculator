@@ -4,7 +4,7 @@ import datetime
 import calendar
 import math
 
-# Page configuration (keeps stable behavior)
+# Page configuration
 st.set_page_config(
     page_title="Day Master Calculator - Whispers of YI",
     page_icon="☯️",
@@ -12,13 +12,14 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- Minimal, safe font override (sans-serif) ---
-# This only changes fonts — avoids touching Streamlit internals.
+# --- Minimal, safe font + color override (system sans-serif) ---
 st.markdown(
     """
     <style>
     html, body, [class*="css"] {
         font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+        background-color: #ffffff !important;
+        color: #000000 !important;
     }
     </style>
     """,
@@ -352,7 +353,7 @@ DAY_MASTER_DATA = {
 }
 
 # ----------------------
-# Validation
+# Validate input
 # ----------------------
 def validate_input(year, month, day, hour, minute):
     """Validate user input and return error message if invalid"""
@@ -380,38 +381,26 @@ def validate_input(year, month, day, hour, minute):
     return None
 
 # ----------------------
-# Astronomical helpers
+# Astronomical helpers (Julian date)
 # ----------------------
 def gregorian_to_julian_date(year, month, day, hour=0, minute=0, second=0):
     """
-    Convert a Gregorian UTC date/time to Julian Date (JD).
-    Algorithm valid for Gregorian calendar dates (i.e. after 1582-10-15).
-    Returns JD as a float (JD starts at noon).
+    Convert a Gregorian date/time (UTC) to Julian Date (JD, fractional).
     """
-    # Fractional day from time
-    day_fraction = (hour + minute / 60.0 + second / 3600.0) / 24.0
-
+    day_fraction = (hour + minute/60.0 + second/3600.0) / 24.0
     Y = year
     M = month
     D = day + day_fraction
-
     if M <= 2:
         Y -= 1
         M += 12
-
     A = Y // 100
     B = 2 - A + (A // 4)
-
-    # Integer floor operations as in standard JD formula
-    jd_int = math.floor(365.25 * (Y + 4716)) + math.floor(30.6001 * (M + 1)) + D + B - 1524.5
-    return jd_int
+    jd = math.floor(365.25 * (Y + 4716)) + math.floor(30.6001 * (M + 1)) + D + B - 1524.5
+    return jd
 
 def julian_day_number_at_noon(jd):
-    """
-    Given JD (which has fractional part), return the Julian Day Number corresponding
-    to the noon-based integer as described in the sexagenary cycle source.
-    JD noon integers are JD values for the day's noon; equivalently floor(jd + 0.5).
-    """
+    """Return integer Julain Day Number at noon (floor(jd + 0.5))."""
     return int(math.floor(jd + 0.5))
 
 # ----------------------
@@ -421,171 +410,105 @@ HEAVENLY_STEMS = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
 EARTHLY_BRANCHES = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"]
 
 def calculate_day_master_from_utc(dt_utc):
-    """
-    Compute the Day Master (Heavenly Stem) for a birth moment given in UTC.
-    Uses Julian Date -> JDN_at_noon -> formulas from sexagenary-cycle documentation:
-      T (stem index 1..10) = 1 + mod(JD_noon - 1, 10)
-      B (branch index 1..12) = 1 + mod(JD_noon + 1, 12)
-    We return the 1-character stem (e.g. '甲').
-    """
     jd = gregorian_to_julian_date(dt_utc.year, dt_utc.month, dt_utc.day, dt_utc.hour, dt_utc.minute, dt_utc.second)
     jd_noon = julian_day_number_at_noon(jd)
-    # Heavenly stem index (0-based)
-    stem_idx = ( (jd_noon - 1) % 10 )
-    # Earthly branch index for day (0-based)
-    branch_idx = ( (jd_noon + 1) % 12 )
+    stem_idx = ((jd_noon - 1) % 10)
+    branch_idx = ((jd_noon + 1) % 12)
     return HEAVENLY_STEMS[stem_idx], EARTHLY_BRANCHES[branch_idx], jd, jd_noon
 
-# ----------------------
-# Four pillars generation (improved for day pillar using JD)
-# ----------------------
 def create_four_pillars_from_utc(dt_utc):
-    """
-    Generate a simplified set of four pillars, using:
-      - Year pillar computed from Gregorian year (approximate: uses (year - 3) mod 60 mapping for stem/branch)
-      - Month pillar left as simplified (month mapping approximated; true month requires solar-term boundary)
-      - Day pillar computed via Julian Day Number (JD_noon) for greater accuracy
-      - Hour pillar derives stem from day-stem + hour-slot rule (simplified approach)
-    Note: For production-grade BaZi you'd also convert to solar terms and local longitude/time.
-    """
-    # Year stem/branch (approximate mapping using year -> sexagenary year for the "Chinese year in that Gregorian year")
+    # Year pillar (approx)
     year_num = dt_utc.year
-    # According to common formula for sexagenary year: sexagenary_index = (year - 3) % 60 (1..60)
-    sexagenary_year_index = (year_num - 3) % 60  # 0..59
-    # Map to stems/branches for year:
+    sexagenary_year_index = (year_num - 3) % 60
     year_stem = HEAVENLY_STEMS[sexagenary_year_index % 10]
     year_branch = EARTHLY_BRANCHES[sexagenary_year_index % 12]
-
-    # Month stem/branch — simplified: month_branch is month-1 index; month_stem tries to align by month and year-stem
+    # Month pillar (simplified)
     month_branch = EARTHLY_BRANCHES[(dt_utc.month - 1) % 12]
-    # Month stem approximate relationship: first month of a Jia/Ji year is 丙 (index 2)
-    # We'll use: month_stem_index = ( (HEAVENLY_STEMS.index(year_stem) + 2) + (dt_utc.month - 1) ) % 10
     month_stem_index = (HEAVENLY_STEMS.index(year_stem) + 2 + (dt_utc.month - 1)) % 10
     month_stem = HEAVENLY_STEMS[month_stem_index]
-
-    # Day pillar using Julian day (more accurate)
+    # Day pillar (JD-based)
     day_stem, day_branch, jd, jd_noon = calculate_day_master_from_utc(dt_utc)
-
-    # Hour pillar: map 24-hour to 12 double-hours: 23-0 => 子, 1-2 => 丑, 3-4 => 寅, ..., 21-22 => 亥
-    hour_slot = (dt_utc.hour + 1) // 2  # 0..11 where 0 => 子 slot (23-0)
+    # Hour pillar
+    hour_slot = (dt_utc.hour + 1) // 2
     hour_branch = EARTHLY_BRANCHES[hour_slot % 12]
-    # Hour stem: correlated to day stem: stem_index_for_hour = (HEAVENLY_STEMS.index(day_stem) + hour_slot) % 10
     hour_stem = HEAVENLY_STEMS[(HEAVENLY_STEMS.index(day_stem) + hour_slot) % 10]
-
     return {
-        'year': f"{year_stem}{year_branch}",
-        'month': f"{month_stem}{month_branch}",
-        'day': f"{day_stem}{day_branch}",
-        'hour': f"{hour_stem}{hour_branch}",
-        'day_master': day_stem,
-        'jd': jd,
-        'jd_noon': jd_noon
+        "year": f"{year_stem}{year_branch}",
+        "month": f"{month_stem}{month_branch}",
+        "day": f"{day_stem}{day_branch}",
+        "hour": f"{hour_stem}{hour_branch}",
+        "day_master": day_stem,
+        "jd": jd,
+        "jd_noon": jd_noon
     }
 
-# ----------------------
-# Main application UI
-# ----------------------
-st.title("Day Master Calculator")
-st.caption("A quiet voice in the scrollstorm — discover your elemental nature through the ancient wisdom of BaZi")
-
-# Sidebar for input
-with st.sidebar:
-    st.header("Birth Information")
-
-    with st.form("birth_form"):
-        current_year = datetime.datetime.now().year
-
-        birth_year = st.number_input("Birth Year",
-                                   min_value=1900,
-                                   max_value=current_year,
-                                   value=1990)
-
-        birth_month = st.number_input("Birth Month",
-                                    min_value=1,
-                                    max_value=12,
-                                    value=1)
-
-        birth_day = st.number_input("Birth Day",
-                                  min_value=1,
-                                  max_value=31,
-                                  value=1)
-
-        col1, col2 = st.columns(2)
-        with col1:
-            birth_hour = st.number_input("Hour",
-                                       min_value=0,
-                                       max_value=23,
-                                       value=12)
-        with col2:
-            birth_minute = st.number_input("Minute",
-                                         min_value=0,
-                                         max_value=59,
-                                         value=0)
-
-        timezone_options = [f"GMT{'+' if i >= 0 else ''}{i}" for i in range(-12, 13)]
-        # default index for GMT+8 (Malaysia)
-        default_index = timezone_options.index("GMT+8") if "GMT+8" in timezone_options else 0
-        selected_timezone = st.selectbox("Time Zone", timezone_options, index=default_index)
-
-        submit_button = st.form_submit_button("Calculate Day Master")
-
-# Helper: parse timezone string like "GMT+8" -> int offset_hours = +8
 def parse_gmt_offset(tz_str):
-    # Expect tz_str like "GMT+8" or "GMT-5"
     try:
         if tz_str.startswith("GMT"):
-            offset = int(tz_str[3:])
-            return offset
+            return int(tz_str[3:])
     except:
         pass
     return 0
 
-# Main content area
-if submit_button:
-    # Validate input
-    error_message = validate_input(birth_year, birth_month, birth_day, birth_hour, birth_minute)
+# ----------------------
+# UI - Stable native Streamlit
+# ----------------------
+st.title("Day Master Calculator")
+st.caption("A quiet voice in the scrollstorm — discover your elemental nature through the ancient wisdom of BaZi")
 
+# Sidebar form
+with st.sidebar:
+    st.header("Birth Information")
+    with st.form("birth_form"):
+        current_year = datetime.datetime.now().year
+        birth_year = st.number_input("Birth Year", min_value=1900, max_value=current_year, value=1990)
+        birth_month = st.number_input("Birth Month", min_value=1, max_value=12, value=1)
+        birth_day = st.number_input("Birth Day", min_value=1, max_value=31, value=1)
+        col1, col2 = st.columns(2)
+        with col1:
+            birth_hour = st.number_input("Hour (0-23)", min_value=0, max_value=23, value=12)
+        with col2:
+            birth_minute = st.number_input("Minute (0-59)", min_value=0, max_value=59, value=0)
+        timezone_options = [f"GMT{'+' if i >= 0 else ''}{i}" for i in range(-12, 13)]
+        default_index = timezone_options.index("GMT+8") if "GMT+8" in timezone_options else 0
+        selected_timezone = st.selectbox("Time Zone", timezone_options, index=default_index)
+        submit_button = st.form_submit_button("Calculate Day Master")
+
+# Main content
+if submit_button:
+    error_message = validate_input(birth_year, birth_month, birth_day, birth_hour, birth_minute)
     if error_message:
         st.error(error_message)
     else:
         try:
-            # Construct naive local datetime as user entered for that GMT zone
             local_dt = datetime.datetime(birth_year, birth_month, birth_day, birth_hour, birth_minute, 0)
-
-            # Convert selected timezone into UTC by subtracting offset hours
-            tz_offset = parse_gmt_offset(selected_timezone)  # e.g. GMT+8 -> 8
-            # So UTC = local_dt - offset
+            tz_offset = parse_gmt_offset(selected_timezone)
             dt_utc = local_dt - datetime.timedelta(hours=tz_offset)
 
-            # Calculate pillars with improved day computation (uses dt_utc for JD calc)
             pillars = create_four_pillars_from_utc(dt_utc)
-            day_master_key = pillars['day_master']
+            day_master_key = pillars["day_master"]
             day_master_info = DAY_MASTER_DATA.get(day_master_key)
 
-            # Success message
-            st.success("Your Day Master has been calculated successfully")
+            st.success("Day Master calculated successfully")
 
-            # Four Pillars display using native columns
+            # Four pillars display
             c1, c2, c3, c4 = st.columns(4)
             c1.subheader("Year Pillar")
             c1.markdown(f"**{pillars['year']}**")
             c1.caption("Ancestry & Foundation")
-
             c2.subheader("Month Pillar")
             c2.markdown(f"**{pillars['month']}**")
             c2.caption("Career & Relationships")
-
             c3.subheader("Day Pillar")
             c3.markdown(f"**{pillars['day']}**")
             c3.caption("Self & Spouse")
-
             c4.subheader("Hour Pillar")
             c4.markdown(f"**{pillars['hour']}**")
             c4.caption("Children & Legacy")
 
             st.markdown("---")
 
-            # Day Master Analysis (native Streamlit presentation)
+            # Day Master analysis
             if day_master_info:
                 st.header(f"{day_master_info['name']} — {day_master_key} ({day_master_info['element']})")
                 st.write(day_master_info["description"])
@@ -609,22 +532,22 @@ if submit_button:
             else:
                 st.error("Day Master data unavailable for computed stem.")
 
-            # Additional birth information & technical details
+            # Technical expander
             with st.expander("Birth Details & Technical Information"):
-                # Show local input time and computed UTC time clearly
-                st.write(f"**Complete Birth Information (as entered):**")
-                st.write(f"Local Date: {local_dt.strftime('%B %d, %Y')}")
-                st.write(f"Local Time: {local_dt.strftime('%H:%M')} ({selected_timezone})")
+                st.write(f"**Complete Birth Information:**")
+                st.write(f"Date: {local_dt.strftime('%B %d, %Y')}")
+                st.write(f"Time: {local_dt.strftime('%H:%M')} ({selected_timezone})")
                 st.write(f"**Converted to UTC for calculation:** {dt_utc.strftime('%Y-%m-%d %H:%M')} (UTC)")
-
-                st.write("**Four Pillars (simplified / solar approximation):**")
-                st.write(f"{pillars['year']}  {pillars['month']}  {pillars['day']}  {pillars['hour']}")
-                st.write(f"**Day Master Element:** {day_master_key} ({day_master_info['name'] if day_master_info else 'Unknown'})")
                 st.write("")
-                st.write("**Julian Date (used for day computation):**")
-                st.write(f"JD (with fraction): {pillars['jd']:.6f}")
-                st.write(f"JD Noon (integer used): {pillars['jd_noon']}")
-
+                st.write("**Four Pillars (simplified / approximate):**")
+                st.write(f"- Year: {pillars['year']}")
+                st.write(f"- Month: {pillars['month']}")
+                st.write(f"- Day: {pillars['day']}")
+                st.write(f"- Hour: {pillars['hour']}")
+                st.write("")
+                st.write("**Julian info used for Day Stem calculation:**")
+                st.write(f"- JD (fractional): {pillars['jd']:.6f}")
+                st.write(f"- JD noon integer: {pillars['jd_noon']}")
                 st.markdown("---")
                 st.info(
                     "Note: This tool improves day-stem accuracy by using Julian-Day-based calculations and UTC. "
@@ -635,7 +558,7 @@ if submit_button:
             st.error(f"An error occurred during calculation: {e}")
 
 else:
-    # Instructions when no calculation has been performed
+    # Instructional home view
     st.markdown("## How to use")
     st.write("Enter your exact birth date and time (including minutes) in the sidebar, select the GMT offset for the birth location, then click 'Calculate Day Master'.")
     st.write("")
