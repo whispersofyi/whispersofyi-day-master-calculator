@@ -400,7 +400,7 @@ def gregorian_to_julian_date(year, month, day, hour=0, minute=0, second=0):
     return jd
 
 def julian_day_number_at_noon(jd):
-    """Return integer Julain Day Number at noon (floor(jd + 0.5))."""
+    """Return integer Julian Day Number at noon (floor(jd + 0.5))."""
     return int(math.floor(jd + 0.5))
 
 # ----------------------
@@ -473,6 +473,10 @@ with st.sidebar:
         default_index = timezone_options.index("GMT+8") if "GMT+8" in timezone_options else 0
         selected_timezone = st.selectbox("Time Zone", timezone_options, index=default_index)
         submit_button = st.form_submit_button("Calculate Day Master")
+
+    # Stable sidebar return link (always visible)
+    st.markdown("---")
+    st.markdown("[← Back to Whispers of YI](https://whispersofyi.github.io/)")
 
 # Main content
 if submit_button:
@@ -553,6 +557,10 @@ if submit_button:
                     "Note: This tool improves day-stem accuracy by using Julian-Day-based calculations and UTC. "
                     "For full professional BaZi accuracy you'd convert to local apparent solar time (longitude) and apply solar-term boundaries (立春, etc.)."
                 )
+
+            # Bottom return link (visible when sidebar is collapsed on mobile)
+            st.markdown("---")
+            st.markdown("[← Back to Whispers of YI](https://whispersofyi.github.io/)")
 
         except Exception as e:
             st.error(f"An error occurred during calculation: {e}")
