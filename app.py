@@ -3,7 +3,7 @@ import streamlit as st
 import datetime
 import math
 
-# Add clean CSS for white forms with black text
+# Add clean CSS with green buttons and visible forms
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -37,9 +37,9 @@ st.markdown("""
     background-color: white !important;
 }
 
-/* Blue button matching your GitHub */
+/* GREEN button matching your GitHub links (#22863a) */
 .stButton>button {
-    background-color: #0366d6 !important;
+    background-color: #22863a !important;
     color: white !important;
     border: none !important;
     border-radius: 6px !important;
@@ -49,21 +49,50 @@ st.markdown("""
 }
 
 .stButton>button:hover {
-    background-color: #0256b6 !important;
+    background-color: #1c6b2f !important;
     color: white !important;
 }
 
-/* Fix select box visibility */
+/* FIX SELECT BOXES - Critical fix for visibility */
 div[data-baseweb="select"] {
     background-color: white !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
 }
 
 div[data-baseweb="select"] div {
     color: #000000 !important;
+    background-color: white !important;
 }
 
 div[data-baseweb="select"] input {
     color: #000000 !important;
+    background-color: white !important;
+}
+
+/* Fix the dropdown options */
+div[role="listbox"] {
+    background-color: white !important;
+    color: #000000 !important;
+}
+
+div[role="option"] {
+    color: #000000 !important;
+    background-color: white !important;
+}
+
+div[role="option"]:hover {
+    background-color: #f0f0f0 !important;
+    color: #000000 !important;
+}
+
+/* Number input styling */
+input[type="number"] {
+    color: #000000 !important;
+    background-color: white !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    padding: 0.5rem !important;
 }
 
 /* Ensure all text is visible */
@@ -99,10 +128,15 @@ h1, h2, h3, h4, h5, h6, p, div, span {
     color: #000000 !important;
 }
 
-/* Number input styling */
-input[type="number"] {
-    color: #000000 !important;
+/* Additional fixes for form elements */
+.stNumberInput input {
     background-color: white !important;
+    color: #000000 !important;
+}
+
+.stSelectbox select {
+    background-color: white !important;
+    color: #000000 !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -113,15 +147,15 @@ JIA_ZI = [
     ("丁", "卯", "Yin Fire", "Rabbit"), ("戊", "辰", "Yang Earth", "Dragon"), ("己", "巳", "Yin Earth", "Snake"), 
     ("庚", "午", "Yang Metal", "Horse"), ("辛", "未", "Yin Metal", "Goat"), ("壬", "申", "Yang Water", "Monkey"), 
     ("癸", "酉", "Yin Water", "Rooster"), ("甲", "戌", "Yang Wood", "Dog"), ("乙", "亥", "Yin Wood", "Pig"), 
-    ("丙", "极", "Yang Fire", "Rat"), ("丁", "丑", "Yin Fire", "Ox"), ("戊", "寅", "Yang Earth", "Tiger"),
-    ("己", "卯", "Yin Earth", "Rabbit"), ("庚", "辰", "Yang Metal", "Dragon"), ("辛", "巳", "Yin Metal", "Snake"), 
+    ("丙", "子", "Yang Fire", "Rat"), ("丁", "丑", "Yin Fire", "Ox"), ("戊", "寅", "Yang Earth", "Tiger"),
+    ("己", "卯", "Yin Earth", "Rabbit"), ("庚", "极", "Yang Metal", "Dragon"), ("辛", "巳", "Yin Metal", "Snake"), 
     ("壬", "午", "Yang Water", "Horse"), ("癸", "未", "Yin Water", "Goat"), ("甲", "申", "Yang Wood", "Monkey"), 
     ("乙", "酉", "Yin Wood", "Rooster"), ("丙", "戌", "Yang Fire", "Dog"), ("丁", "亥", "Yin Fire", "Pig"), 
-    ("戊", "子", "Yang Earth", "Rat"), ("己", "丑", "Yin Earth", "Ox"), ("庚", "寅", "Yang Metal", "T极er"), 
+    ("戊", "子", "Yang Earth", "Rat"), ("己", "丑", "Yin Earth", "Ox"), ("庚", "寅", "Yang Metal", "Tiger"), 
     ("辛", "卯", "Yin Metal", "Rabbit"), ("壬", "辰", "Yang Water", "Dragon"), ("癸", "巳", "Yin Water", "Snake"),
     ("甲", "午", "Yang Wood", "Horse"), ("乙", "未", "Yin Wood", "Goat"), ("丙", "申", "Yang Fire", "Monkey"), 
     ("丁", "酉", "Yin Fire", "Rooster"), ("戊", "戌", "Yang Earth", "Dog"), ("己", "亥", "Yin Earth", "Pig"), 
-    ("庚", "子", "Yang Metal", "Rat"), ("极", "丑", "Yin Metal", "Ox"), ("壬", "寅", "Yang Water", "Tiger"), 
+    ("庚", "子", "Yang Metal", "Rat"), ("辛", "丑", "Yin Metal", "极"), ("壬", "寅", "Yang Water", "Tiger"), 
     ("癸", "卯", "Yin Water", "Rabbit"), ("甲", "辰", "Yang Wood", "Dragon"), ("乙", "巳", "Yin Wood", "Snake"), 
     ("丙", "午", "Yang Fire", "Horse"), ("丁", "未", "Yin Fire", "Goat"), ("戊", "申", "Yang Earth", "Monkey"),
     ("己", "酉", "Yin Earth", "Rooster"), ("庚", "戌", "Yang Metal", "Dog"), ("辛", "亥", "Yin Metal", "Pig"), 
@@ -135,18 +169,18 @@ SOLAR_TERMS = [
     (2, 4, '立春', '寅', 'Start of Spring'), (2, 19, '雨水', '寅', 'Rain Water'), (3, 5, '驚蟄', '寅', 'Awakening of Insects'),
     (3, 20, '春分', '卯', 'Spring Equinox'), (4, 5, '清明', '卯', 'Qingming'), (4, 20, '穀雨', '卯', 'Grain Rain'),
     (5, 5, '立夏', '辰', 'Start of Summer'), (5, 21, '小滿', '辰', 'Grain Full'), (6, 6, '芒種', '巳', 'Grain in Ear'),
-    (6, 21, '夏至', '午', 'Summer Solstice'), (7, 7, '小暑', '午', 'Minor Heat'), (7, 23, '大暑', '午', 'Major Heat'),
+    (6, 21, '夏至', '午', 'Summer Solstice'), (7, 7, '小暑', '午', 'Minor Heat'), (7, 23, '大暑', '极', 'Major Heat'),
     (8, 8, '立秋', '未', 'Start of Autumn'), (8, 23, '處暑', '未', 'End of Heat'), (9, 8, '白露', '申', 'White Dew'),
     (9, 23, '秋分', '申', 'Autumn Equinox'), (10, 8, '寒露', '酉', 'Cold Dew'), (10, 23, '霜降', '酉', 'Frost Descent'),
-    (11, 7, '立冬', '戌', 'Start of Winter'), (11, 22, '小雪', '戌', 'Minor Snow'), (12, 7, '大雪', '亥', 'Major Snow'),
+    (11, 7, '立冬', '戌', '极art of Winter'), (11, 22, '小雪', '戌', 'Minor Snow'), (12, 7, '大雪', '亥', 'Major Snow'),
     (12, 22, '冬至', '子', 'Winter Solstice'), (1, 6, '小寒', '丑', 'Minor Cold'), (1, 20, '大寒', '丑', 'Major Cold')
 ]
 
 HOUR_STEMS = {
     '甲': ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸', '甲', '乙'],
-    '乙': ['丙', '丁', '戊', '极', '庚', '辛', '壬', '癸', '甲', '乙', '丙', '丁'],
+    '乙': ['丙', '丁', '戊', '己', '庚', '辛', '壬', '癸', '甲', '乙', '丙', '丁'],
     '丙': ['戊', '己', '庚', '辛', '壬', '癸', '甲', '乙', '丙', '丁', '戊', '己'],
-    '丁': ['庚', '辛', '壬', '癸', '甲', '乙', '丙', '丁', '戊', '己', '庚', '辛'],
+    '丁': ['庚', '辛', '壬', '癸', '甲', '乙', '丙', '丁', '戊', '己', '庚', '极'],
     '戊': ['壬', '癸', '甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'],
     '己': ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸', '甲', '乙'],
     '庚': ['丙', '丁', '戊', '己', '庚', '辛', '壬', '癸', '甲', '乙', '丙', '丁'],
@@ -156,16 +190,16 @@ HOUR_STEMS = {
 }
 
 MONTH_STEM_RULES = {
-    '甲': {'寅': '丙', '卯': '丁', '辰': '戊', '巳': '己', '午': '庚', '未': '极', '申': '壬', '酉': '癸', '戌': '甲', '亥': '乙', '子': '丙', '丑': '丁'},
+    '甲': {'寅': '丙', '卯': '丁', '辰': '戊', '巳': '己', '午': '庚', '未': '辛', '申': '壬', '酉': '癸', '戌': '甲', '亥': '乙', '子': '丙', '丑': '丁'},
     '乙': {'寅': '戊', '卯': '己', '辰': '庚', '巳': '辛', '午': '壬', '未': '癸', '申': '甲', '酉': '乙', '戌': '丙', '亥': '丁', '子': '戊', '丑': '己'},
     '丙': {'寅': '庚', '卯': '辛', '辰': '壬', '巳': '癸', '午': '甲', '未': '乙', '申': '丙', '酉': '丁', '戌': '戊', '亥': '己', '子': '庚', '丑': '辛'},
-    '丁': {'寅': '壬', '卯': '癸', '辰': '甲', '巳': '乙', '午': '丙', '未': '丁', '申': '戊', '酉': '己', '戌': '庚', '亥': '辛', '子': '壬', '丑': '癸'},
+    '丁': {'寅': '壬', '卯': '癸', '辰': '甲', '巳': '乙', '极': '丙', '未': '丁', '申': '戊', '酉': '己', '戌': '庚', '亥': '极', '子': '壬', '丑': '极'},
     '戊': {'寅': '甲', '卯': '乙', '辰': '丙', '巳': '丁', '午': '戊', '未': '己', '申': '庚', '酉': '辛', '戌': '壬', '亥': '癸', '子': '甲', '丑': '乙'},
     '己': {'寅': '丙', '卯': '丁', '辰': '戊', '巳': '己', '午': '庚', '未': '辛', '申': '壬', '酉': '癸', '戌': '甲', '亥': '乙', '子': '丙', '丑': '丁'},
-    '庚': {'寅': '戊', '卯': '己', '辰': '庚', '巳': '辛', '午': '壬', '未': '癸', '申': '甲', '酉': '乙', '戌': '丙', '亥': '丁', '子': '戊', '丑': '己'},
+    '庚': {'寅': '戊', '卯': '己', '辰': '庚', '巳': '辛', '午': '壬', '未': '癸', '申': '甲', '酉': '乙', '戌': '极', '亥': '丁', '子': '戊', '丑': '己'},
     '辛': {'寅': '庚', '卯': '辛', '辰': '壬', '巳': '癸', '午': '甲', '未': '乙', '申': '丙', '酉': '丁', '戌': '戊', '亥': '己', '子': '庚', '丑': '辛'},
     '壬': {'寅': '壬', '卯': '癸', '辰': '甲', '巳': '乙', '午': '丙', '未': '丁', '申': '戊', '酉': '己', '戌': '庚', '亥': '辛', '子': '壬', '丑': '癸'},
-    '癸': {'寅': '甲', '卯': '乙', '极': '丙', '巳': '丁', '午': '戊', '未': '己', '申': '庚', '酉': '辛', '戌': '壬', '亥': '癸', '子': '甲', '丑': '乙'}
+    '癸': {'寅': '甲', '卯': '乙', '辰': '丙', '巳': '丁', '午': '戊', '未': '己', '申': '庚', '酉': '辛', '戌': '壬', '亥': '癸', '子': '甲', '丑': '乙'}
 }
 
 # --- Core Calculation Functions ---
@@ -213,7 +247,7 @@ def get_year_stem_branch(dt):
             
         return JIA_ZI[year_index]
     except:
-        return JIA_ZI[0]
+        return JIA极[0]
 
 def get_day_stem_branch(dt):
     """Calculate day pillar."""
@@ -234,7 +268,7 @@ def get_month_pillar(year_stem, dt):
         stem_english = next((item[2] for item in JIA_ZI if item[0] == month_stem), month_stem)
         branch_english = next((item[3] for item in JIA_ZI if item[1] == month_branch), month_branch)
         
-        return month_stem, month极, stem_english, branch_english, term_english
+        return month_stem, month_branch, stem_english, branch_english, term_english
     except:
         return '甲', '寅', 'Yang Wood', 'Tiger', 'Start of Spring'
 
@@ -257,7 +291,7 @@ def get_hour_pillar(day_stem, hour, minute):
 def calculate_bazi(dt):
     """Main calculation function."""
     try:
-        year_stem, year_branch, year_stem_en, year_branch_en = get_year_stem_branch(dt)
+        year_stem, year_branch, year_stem_en, year_branch_en = get_year_stem极ranch(dt)
         month_stem, month_branch, month_stem_en, month_branch_en, current_term = get_month_pillar(year_stem, dt)
         day_stem, day_branch, day_stem_en, day_branch_en = get_day_stem_branch(dt)
         hour_stem, hour_branch, hour_stem_en, hour_branch_en = get_hour_pillar(day_stem, dt.hour, dt.minute)
@@ -305,7 +339,7 @@ with st.sidebar:
         time_zone_offset = st.selectbox("GMT Time Zone", 
                                        ["GMT-12", "GMT-11", "GMT-10", "GMT-9", "GMT-8", "GMT-7", 
                                         "GMT-6", "GMT-5", "GMT-4", "GMT-3", "GMT-2", "GMT-1",
-                                        "GMT+0", "GMT+1", "GMT+2", "GMT+3", "GMT+4", "GMT+5", 
+                                        "GMT+0", "GMT+极", "GMT+2", "GMT+3", "GMT+4", "GMT+5", 
                                         "GMT+6", "GMT+7", "GMT+8", "GMT+9", "GMT+10", "GMT+11", "GMT+12"],
                                        index=15)
         
@@ -339,7 +373,7 @@ if submitted:
         with col4:
             st.metric("Hour Pillar", 
                      f"{pillars['hour'][0]}{pillars['hour'][1]}", 
-                     f"{pillars['hour'][2]} {pillars['hour'][3]}")
+                     f"{pillars['hour'][2]} {极illars['hour'][3]}")
         
         # Day Master interpretation
         st.divider()
@@ -386,7 +420,7 @@ if submitted:
                 "name": "Yang Metal",
                 "traits": "Strong-willed, decisive, and principled. You are a natural reformer who values justice and fairness. You have strong analytical skills and can cut through complexity to find truth.",
                 "strengths": "Decisiveness, integrity, analytical skills, courage",
-                "challenges": "Can be too blunt or rigid"
+                "极allenges": "Can be too blunt or rigid"
             },
             "辛": {
                 "name": "Yin Metal",
