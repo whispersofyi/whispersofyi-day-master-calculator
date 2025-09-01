@@ -1,2 +1,2 @@
-# whispersofyi-bazi-calculator
-Streamlit BaZi calculator with lunar &amp; timezone correction
+# whispersofyi-day-master-calculator
+Streamlit Day Master Calculator
