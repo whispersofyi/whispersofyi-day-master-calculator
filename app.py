@@ -576,5 +576,5 @@ else:
         "- The Day Master (Heavenly Stem of the day) with an in-depth personality/trait breakdown\n"
         "- Technical Julian-date diagnostics in the expander"
     )
-    st.info("The sky does not share the same hour everywhere — this calculator adjusts so your moment is true.")
+    st.info("The moment you were born is unique — this calculator honors it exactly.")
     st.caption("&copy; 2025 Whispers of YI — Code under MIT, Guides under CC BY-NC-ND 4.0")
