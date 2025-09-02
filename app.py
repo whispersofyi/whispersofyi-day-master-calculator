@@ -577,4 +577,4 @@ else:
         "- Technical Julian-date diagnostics in the expander"
     )
     st.info("The sky does not share the same hour everywhere — this calculator adjusts so your moment is true.")
-     st.caption("&copy; 2025 Whispers of YI — Code under MIT, Guides under CC BY-NC-ND 4.0")
+    st.caption("“The flame flickers in wind, but never forgets it burns.” — Understanding your Day Master is understanding the element that never changes within you.")
