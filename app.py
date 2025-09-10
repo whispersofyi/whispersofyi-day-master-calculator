@@ -747,6 +747,6 @@ else:
         st.markdown("**Equation of Time**")
         st.write("Corrects for Earth's orbital variations. Ranges from +16 to -14 minutes throughout the year.")
     
-    st.info("💡 **Why it matters:** These corrections can shift your hour pillar or even day pillar, potentially changing your Day Master entirely. The moment you were born deserves the most accurate calculation possible.")
+    st.info("Why it matters: These corrections can shift your hour pillar or even day pillar, potentially changing your Day Master entirely. The moment you were born deserves the most accurate calculation possible.")
     
     st.caption("&copy; 2025 Whispers of YI — Code under MIT, Guides under CC BY-NC-ND 4.0")
