@@ -4,15 +4,14 @@ import datetime
 import calendar
 import math
 
-# Page configuration (no emoji/icon)
+# Page configuration (no decorative icons)
 st.set_page_config(
     page_title="Day Master Calculator - Whispers of YI",
-    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Minimal, safe font + color override (system sans-serif) + pillar styling
+# Minimal, stable sans-serif override + pillar styling
 st.markdown(
     """
     <style>
@@ -21,19 +20,23 @@ st.markdown(
         background-color: #ffffff !important;
         color: #000000 !important;
     }
-    /* Pillar visual */
-    .woy-pillar { text-align: center; margin: 1.25rem 0; }
-    .woy-pillar .hanzi { display:block; font-size:48px; font-weight:700; line-height:1; }
-    .woy-pillar .caption { font-size:0.95rem; color:#444; margin-top:0.25rem; }
-    /* Center metrics row */
-    .woy-metrics { display:flex; justify-content:center; gap:2rem; align-items:stretch; margin:1rem 0; }
-    .woy-metric { text-align:center; min-width:160px; padding:0.5rem 0; border-radius:6px; }
-    .woy-metric .title { font-size:0.95rem; color:#333; margin-bottom:0.35rem; }
-    .woy-metric .value { font-size:1.35rem; font-weight:600; }
-    /* Small responsive tweaks */
-    @media (max-width:640px) {
-        .woy-metric { min-width:120px; }
-        .woy-pillar .hanzi { font-size:36px; }
+    .pillar-box {
+        text-align: center;
+        margin: 10px 0;
+    }
+    .pillar-chinese {
+        font-size: 56px;
+        font-weight: 700;
+        line-height: 1;
+    }
+    .pillar-caption {
+        font-size: 14px;
+        color: #333333;
+        margin-top: 6px;
+    }
+    .small-note {
+        color: #555555;
+        font-size: 13px;
     }
     </style>
     """,
@@ -41,7 +44,7 @@ st.markdown(
 )
 
 # ----------------------
-# Day Master database (all 10 stems) - kept full content you previously supplied
+# Complete Day Master database (all 10 stems)
 # ----------------------
 DAY_MASTER_DATA = {
     "甲": {
@@ -367,36 +370,63 @@ DAY_MASTER_DATA = {
 }
 
 # ----------------------
-# Solar time helpers (Julian date, EoT, longitude correction)
+# Solar Time Calculation Functions
 # ----------------------
 def day_of_year(year, month, day):
     date = datetime.date(year, month, day)
     return date.timetuple().tm_yday
 
 def equation_of_time(doy):
-    # NOAA-like approximation (minutes)
-    B = 2 * math.pi * (doy - 81) / 364.0
+    # NOAA approximation in minutes
+    B = 2 * math.pi * (doy - 81) / 364
     eot = 9.87 * math.sin(2 * B) - 7.53 * math.cos(B) - 1.5 * math.sin(B)
     return eot
 
-def longitude_correction(longitude_deg, timezone_offset_hours):
-    # timezone meridian (degrees east)
-    tz_meridian = timezone_offset_hours * 15.0
-    correction_minutes = (longitude_deg - tz_meridian) / 15.0 * 60.0
+def longitude_correction(longitude, timezone_offset):
+    tz_meridian = timezone_offset * 15.0
+    correction_minutes = (longitude - tz_meridian) / 15.0 * 60.0
     return correction_minutes
 
-def civil_to_apparent_solar(dt_civil, longitude_deg, timezone_offset_hours):
+def civil_to_apparent_solar(dt_civil, longitude, timezone_offset):
     doy = day_of_year(dt_civil.year, dt_civil.month, dt_civil.day)
     eot = equation_of_time(doy)
-    long_corr = longitude_correction(longitude_deg, timezone_offset_hours)
+    long_corr = longitude_correction(longitude, timezone_offset)
     total_correction = long_corr + eot
     dt_solar = dt_civil + datetime.timedelta(minutes=total_correction)
     return dt_solar, long_corr, eot
 
+# ----------------------
+# Validate input
+# ----------------------
+def validate_input(year, month, day, hour, minute, longitude=None):
+    current_year = datetime.datetime.now().year
+    if not (1900 <= year <= current_year):
+        return f"Year must be between 1900 and {current_year}"
+    if not (1 <= month <= 12):
+        return "Month must be between 1 and 12"
+    try:
+        max_day = calendar.monthrange(year, month)[1]
+        if not (1 <= day <= max_day):
+            return f"Day must be between 1 and {max_day} for {calendar.month_name[month]}"
+    except:
+        return "Invalid month/year combination"
+    if not (0 <= hour <= 23):
+        return "Hour must be between 0 and 23"
+    if not (0 <= minute <= 59):
+        return "Minute must be between 0 and 59"
+    if longitude is not None:
+        if not (-180.0 <= longitude <= 180.0):
+            return "Longitude must be between -180 and 180 degrees"
+    return None
+
+# ----------------------
+# Astronomical helpers (Julian date & sexagenary)
+# ----------------------
 def gregorian_to_julian_date(year, month, day, hour=0, minute=0, second=0):
-    D = day + (hour + minute/60.0 + second/3600.0)/24.0
+    day_fraction = (hour + minute/60.0 + second/3600.0) / 24.0
     Y = year
     M = month
+    D = day + day_fraction
     if M <= 2:
         Y -= 1
         M += 12
@@ -408,35 +438,6 @@ def gregorian_to_julian_date(year, month, day, hour=0, minute=0, second=0):
 def julian_day_number_at_noon(jd):
     return int(math.floor(jd + 0.5))
 
-# ----------------------
-# Validation (longitude optional)
-# ----------------------
-def validate_input(year, month, day, hour, minute, longitude, longitude_enabled):
-    current_year = datetime.datetime.now().year
-    if not (1900 <= year <= current_year):
-        return f"Year must be between 1900 and {current_year}"
-    if not (1 <= month <= 12):
-        return "Month must be between 1 and 12"
-    try:
-        max_day = calendar.monthrange(year, month)[1]
-        if not (1 <= day <= max_day):
-            return f"Day must be between 1 and {max_day}"
-    except:
-        return "Invalid month/year combination"
-    if not (0 <= hour <= 23):
-        return "Hour must be between 0 and 23"
-    if not (0 <= minute <= 59):
-        return "Minute must be between 0 and 59"
-    if longitude_enabled:
-        if longitude is None:
-            return "Longitude required when precise correction is enabled"
-        if not (-180.0 <= longitude <= 180.0):
-            return "Longitude must be between -180 and 180 degrees"
-    return None
-
-# ----------------------
-# Sexagenary calculations
-# ----------------------
 HEAVENLY_STEMS = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
 EARTHLY_BRANCHES = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"]
 
@@ -448,18 +449,14 @@ def calculate_day_master_from_solar(dt_solar):
     return HEAVENLY_STEMS[stem_idx], EARTHLY_BRANCHES[branch_idx], jd, jd_noon
 
 def create_four_pillars_from_solar(dt_solar):
-    # Year pillar (approx - professional reading would use Li Chun boundaries)
     year_num = dt_solar.year
     sexagenary_year_index = (year_num - 3) % 60
     year_stem = HEAVENLY_STEMS[sexagenary_year_index % 10]
     year_branch = EARTHLY_BRANCHES[sexagenary_year_index % 12]
-    # Month pillar (simplified)
     month_branch = EARTHLY_BRANCHES[(dt_solar.month - 1) % 12]
     month_stem_index = (HEAVENLY_STEMS.index(year_stem) + 2 + (dt_solar.month - 1)) % 10
     month_stem = HEAVENLY_STEMS[month_stem_index]
-    # Day pillar
     day_stem, day_branch, jd, jd_noon = calculate_day_master_from_solar(dt_solar)
-    # Hour pillar
     hour_slot = (dt_solar.hour + 1) // 2
     hour_branch = EARTHLY_BRANCHES[hour_slot % 12]
     hour_stem = HEAVENLY_STEMS[(HEAVENLY_STEMS.index(day_stem) + hour_slot) % 10]
@@ -474,170 +471,123 @@ def create_four_pillars_from_solar(dt_solar):
     }
 
 # ----------------------
-# Timezone utilities (supports .5 offsets)
+# Timezone helpers (half-hour coverage)
 # ----------------------
-def generate_timezone_options():
-    opts = []
-    # -12.0 to +14.0 inclusive in 0.5 steps
-    start = -24  # -12 * 2
-    end = 28     # 14 * 2
-    for i in range(start, end + 1):
-        offset = i * 0.5
-        if offset == 0:
-            label = "GMT+0"
-        else:
-            sign = "+" if offset > 0 else ""
-            # Format: show .5 for half-hour zones, otherwise integer
-            if offset.is_integer():
-                label = f"GMT{sign}{int(offset)}"
-            else:
-                label = f"GMT{sign}{offset:.1f}"
-        opts.append(label)
-    return opts
+def format_tz_label(offset):
+    if offset == 0:
+        return "GMT"
+    if float(offset).is_integer():
+        return f"GMT{int(offset):+d}"
+    # show one decimal (e.g., +5.5)
+    return f"GMT{offset:+.1f}"
 
-def parse_gmt_offset(tz_str):
-    # tz_str like "GMT+8", "GMT-3.5", "GMT+0"
+def parse_gmt_offset(label):
+    # label like "GMT", "GMT+8", "GMT-3.5"
+    if label == "GMT":
+        return 0.0
     try:
-        if tz_str.startswith("GMT"):
-            s = tz_str[3:]
-            if s == "" or s == "+" or s == "0":
-                return 0.0
-            return float(s)
+        val = label.replace("GMT", "")
+        return float(val)
     except:
-        pass
-    return 0.0
+        return 0.0
+
+tz_offsets = [i * 0.5 for i in range(-24, 29)]  # -12.0 .. +14.0 step 0.5
+tz_options = [format_tz_label(o) for o in tz_offsets]
 
 # ----------------------
-# UI - stable, minimal
+# UI - stable, serious aesthetic
 # ----------------------
 st.title("Day Master Calculator")
 st.caption("A quiet voice in the scrollstorm — discover your elemental nature through the ancient wisdom of BaZi")
 st.info("This calculator uses longitude correction and the Equation of Time to ensure precise Day Master calculations.")
 
-# Sidebar - inputs and detailed explanation
+# Sidebar: longitude toggle outside form for immediate show/hide
 with st.sidebar:
-    st.header("Birth information")
+    st.header("Birth Information")
+    use_longitude = st.checkbox("Enable precise longitude (optional)", value=False)
+    st.markdown("Latitude is not required for BaZi solar-time correction. Enter longitude in decimal degrees (e.g., Hong Kong = 114.1694 for East; London = -0.1276 for West).")
+
     with st.form("birth_form"):
         current_year = datetime.datetime.now().year
-        birth_year = st.number_input("Birth Year", min_value=1900, max_value=current_year, value=1990)
-        birth_month = st.number_input("Birth Month", min_value=1, max_value=12, value=1)
-        birth_day = st.number_input("Birth Day", min_value=1, max_value=31, value=1)
+        b_year = st.number_input("Birth Year", min_value=1900, max_value=current_year, value=1990)
+        b_month = st.number_input("Birth Month", min_value=1, max_value=12, value=1)
+        b_day = st.number_input("Birth Day", min_value=1, max_value=31, value=1)
+
         col1, col2 = st.columns(2)
         with col1:
-            birth_hour = st.number_input("Hour (0–23)", min_value=0, max_value=23, value=12)
+            b_hour = st.number_input("Hour (0-23)", min_value=0, max_value=23, value=12)
         with col2:
-            birth_minute = st.number_input("Minute (0–59)", min_value=0, max_value=59, value=0)
+            b_minute = st.number_input("Minute (0-59)", min_value=0, max_value=59, value=0)
 
-        timezone_options = generate_timezone_options()
-        default_idx = timezone_options.index("GMT+8") if "GMT+8" in timezone_options else 0
-        selected_timezone = st.selectbox("Time zone (GMT offset)", timezone_options, index=default_idx)
+        selected_tz = st.selectbox("Time Zone", tz_options, index=tz_options.index("GMT+8"))
 
-        longitude_enabled = st.checkbox("Enable precise longitude (optional)", value=False)
-        longitude = None
-        if longitude_enabled:
-            longitude = st.number_input("Longitude (degrees, E + / W -)", min_value=-180.0, max_value=180.0, value=0.0, step=0.1)
+        longitude_input = None
+        if use_longitude:
+            longitude_input = st.number_input(
+                "Longitude (decimal degrees)",
+                min_value=-180.0,
+                max_value=180.0,
+                value=114.1694,
+                help="Enter longitude only (decimal degrees). Example: Hong Kong = 114.1694; London = -0.1276"
+            )
 
         submit_button = st.form_submit_button("Calculate Day Master")
 
-    # Detailed explanation - single canonical place for education
-    with st.expander("About solar-time correction (details)"):
-        st.write(
-            "Traditional BaZi uses apparent solar time rather than civil clock time. "
-            "This tool applies two corrections so the calculated Day Master and hour pillar align with solar time:\n\n"
-            "- Longitude correction: adjusts clock time to the timezone meridian (in minutes).\n"
-            "- Equation of Time: corrects for Earth's orbital eccentricity and axial tilt (± ~16 minutes through the year).\n\n"
-            "If precise longitude is not provided this tool uses the timezone meridian as a practical approximation. "
-            "For professional accuracy additional rules (solar-term boundaries such as 立春) may be applied; those are outside this simplified tool."
-        )
-
     st.markdown("---")
-    st.markdown("[← Back to Whispers of YI](https://whispersofyi.github.io/)")
+    st.markdown("[Back to Whispers of YI](https://whispersofyi.github.io/)")
 
-# ----------------------
-# Main behaviour
-# ----------------------
-if 'submit_button' not in st.session_state:
-    # ensure key exists for some Streamlit versions
-    st.session_state['submit_button'] = False
-
+# Main content
 if submit_button:
-    # validate inputs
-    error_message = validate_input(birth_year, birth_month, birth_day, birth_hour, birth_minute, longitude, longitude_enabled)
-    if error_message:
-        st.error(error_message)
+    # Use selected timezone offset
+    tz_offset = parse_gmt_offset(selected_tz)
+
+    # If user didn't enable longitude, approximate using timezone meridian
+    longitude_used = longitude_input if use_longitude else tz_offset * 15.0
+
+    # Validate
+    validation_error = validate_input(b_year, b_month, b_day, b_hour, b_minute, longitude_used)
+    if validation_error:
+        st.error(validation_error)
     else:
         try:
-            # civil/local datetime from user input
-            civil_dt = datetime.datetime(birth_year, birth_month, birth_day, birth_hour, birth_minute, 0)
-
-            tz_offset = parse_gmt_offset(selected_timezone)  # float hours (e.g., 8.0 or 5.5)
-
-            # choose longitude: if precise enabled use it, otherwise approximate by timezone meridian
-            if longitude_enabled and longitude is not None:
-                used_longitude = float(longitude)
-                longitude_note = "Precise longitude provided"
-            else:
-                # approximate by timezone meridian (timezone_offset * 15 degrees)
-                used_longitude = tz_offset * 15.0
-                longitude_note = "Approximate longitude from timezone meridian"
-
-            # compute solar time and corrections
-            solar_dt, long_corr, eot = civil_to_apparent_solar(civil_dt, used_longitude, tz_offset)
-            total_corr = long_corr + eot
-
-            # compute four pillars using solar time
+            civil_dt = datetime.datetime(b_year, b_month, b_day, b_hour, b_minute, 0)
+            solar_dt, long_corr, eot = civil_to_apparent_solar(civil_dt, longitude_used, tz_offset)
             pillars = create_four_pillars_from_solar(solar_dt)
-            day_master_key = pillars.get("day_master")
+            day_master_key = pillars["day_master"]
             day_master_info = DAY_MASTER_DATA.get(day_master_key)
 
-            st.success("Day Master calculated successfully (solar-time corrected)")
-            st.caption("Calculated using longitude correction + Equation of Time (see technical details below).")
+            st.success("Day Master calculated successfully (solar time applied)")
 
-            # centered metrics with simple HTML
-            st.markdown(f"""
-                <div class="woy-metrics">
-                  <div class="woy-metric">
-                    <div class="title">Longitude Correction</div>
-                    <div class="value">{long_corr:+.1f} min</div>
-                  </div>
-                  <div class="woy-metric">
-                    <div class="title">Equation of Time</div>
-                    <div class="value">{eot:+.1f} min</div>
-                  </div>
-                  <div class="woy-metric">
-                    <div class="title">Total Correction</div>
-                    <div class="value">{total_corr:+.1f} min</div>
-                  </div>
-                </div>
-            """, unsafe_allow_html=True)
+            # Corrections centered
+            c1, c2, c3 = st.columns(3)
+            c1.markdown(f"<div style='text-align:center;'><strong>Longitude Correction</strong><br>{long_corr:+.1f} min</div>", unsafe_allow_html=True)
+            c2.markdown(f"<div style='text-align:center;'><strong>Equation of Time</strong><br>{eot:+.1f} min</div>", unsafe_allow_html=True)
+            c3.markdown(f"<div style='text-align:center;'><strong>Total Correction</strong><br>{(long_corr + eot):+.1f} min</div>", unsafe_allow_html=True)
 
-            # flags for user guidance
-            if abs(total_corr) > 30:
-                st.warning("Large time correction applied — this may affect your hour pillar or even the day pillar.")
-            elif abs(total_corr) > 15:
-                st.info("Moderate time correction applied — results are adjusted for higher accuracy.")
+            # Gentle notices about scale of correction
+            total_corr = abs(long_corr + eot)
+            if total_corr > 30:
+                st.warning("Large time correction applied — results may differ significantly from clock-time calculations.")
+            elif total_corr > 15:
+                st.info("Moderate time correction applied — this improves accuracy for BaZi analysis.")
 
             st.markdown("---")
 
-            # Pillars: centered, hanzi large, english caption
+            # Pillars horizontal: enlarge Chinese characters
+            cA, cB, cC, cD = st.columns(4)
             pillar_rows = [
-                ("Year Pillar", pillars["year"], "Ancestry & Foundation"),
-                ("Month Pillar", pillars["month"], "Career & Relationships"),
-                ("Day Pillar", pillars["day"], "Self & Spouse"),
-                ("Hour Pillar", pillars["hour"], "Children & Legacy"),
+                (cA, "Year Pillar", pillars["year"], "Ancestry & Foundation"),
+                (cB, "Month Pillar", pillars["month"], "Career & Relationships"),
+                (cC, "Day Pillar", pillars["day"], "Self & Spouse"),
+                (cD, "Hour Pillar", pillars["hour"], "Children & Legacy"),
             ]
-            for title, hanzi_val, caption in pillar_rows:
-                st.markdown(f"""
-                    <div class="woy-pillar">
-                      <div style="font-weight:600;">{title}</div>
-                      <span class="hanzi">{hanzi_val}</span>
-                      <div class="caption">{caption}</div>
-                    </div>
-                """, unsafe_allow_html=True)
+            for col, title, hanzi, caption in pillar_rows:
+                with col:
+                    st.markdown(f"<div class='pillar-box'><div><strong>{title}</strong></div><div class='pillar-chinese'>{hanzi}</div><div class='pillar-caption'>{caption}</div></div>", unsafe_allow_html=True)
 
             st.markdown("---")
 
-            # Day Master analysis (textual)
+            # Day Master analysis
             if day_master_info:
                 st.header(f"{day_master_info['name']} — {day_master_key} ({day_master_info['element']})")
                 st.write(day_master_info["description"])
@@ -661,18 +611,20 @@ if submit_button:
             else:
                 st.error("Day Master data unavailable for computed stem.")
 
-            # Technical information (single expander with full diagnostics)
-            with st.expander("Birth details & technical information"):
-                st.write(f"**Complete birth (civil) time:** {civil_dt.strftime('%B %d, %Y at %H:%M')}")
-                st.write(f"**Time zone (GMT offset):** {selected_timezone}")
-                st.write(f"**Longitude used:** {used_longitude:.3f}°  — {longitude_note}")
+            # Consolidated technical expander (single source of truth)
+            with st.expander("Birth Details & Technical Information"):
+                st.write("**Input (civil clock time):**")
+                st.write(f"- Date: {civil_dt.strftime('%B %d, %Y')}")
+                st.write(f"- Time: {civil_dt.strftime('%H:%M')} ({selected_tz})")
+                st.write(f"**Longitude used for correction:** {longitude_used:+.4f}° (decimal degrees)")
                 st.write("")
-                st.write(f"**Apparent solar time (applied to calculation):** {solar_dt.strftime('%B %d, %Y at %H:%M:%S')}")
+                st.write("**Converted to Apparent Solar Time:**")
+                st.write(f"- Apparent Solar Time: {solar_dt.strftime('%B %d, %Y at %H:%M:%S')}")
                 st.write("")
-                st.write("**Solar-time corrections applied (minutes):**")
-                st.write(f"- Longitude correction: {long_corr:+.2f} min")
-                st.write(f"- Equation of Time: {eot:+.2f} min")
-                st.write(f"- Total correction: {total_corr:+.2f} min")
+                st.write("**Solar Time Corrections Applied:**")
+                st.write(f"- Longitude correction: {long_corr:+.2f} minutes")
+                st.write(f"- Equation of Time: {eot:+.2f} minutes")
+                st.write(f"- Total correction: {(long_corr + eot):+.2f} minutes")
                 st.write("")
                 st.write("**Four Pillars (based on solar time):**")
                 st.write(f"- Year: {pillars['year']}")
@@ -680,40 +632,47 @@ if submit_button:
                 st.write(f"- Day: {pillars['day']}")
                 st.write(f"- Hour: {pillars['hour']}")
                 st.write("")
-                st.write("**Julian date diagnostics used for day-stem:**")
-                # calculate JD fractional and JD noon
-                jd = pillars.get("jd")
-                jd_noon = pillars.get("jd_noon")
-                if jd is not None:
-                    st.write(f"- JD (fractional): {jd:.6f}")
-                    st.write(f"- JD noon integer: {jd_noon}")
+                st.write("**Julian Date Information:**")
+                st.write(f"- JD (fractional): {pillars['jd']:.6f}")
+                st.write(f"- JD noon integer: {pillars['jd_noon']}")
                 st.markdown("---")
+                st.write("About Solar Time Correction:")
                 st.write(
-                    "Note: This tool improves day-stem accuracy by converting civil time to apparent solar time. "
-                    "For full professional BaZi accuracy you'd also incorporate solar-term boundaries (立春 etc.)."
+                    "This tool converts civil (clock) time to apparent solar time for BaZi calculations. "
+                    "Two corrections are applied:\n\n"
+                    "1. Longitude correction — adjusts for difference between your longitude and your timezone meridian.\n"
+                    "2. Equation of Time — accounts for Earth's orbital eccentricity and axial tilt (seasonal ± ~16 minutes).\n\n"
+                    "Combined, these provide a more accurate moment for calculating the Day Stem and Hour Pillar. "
+                    "For ultimate professional accuracy you'd also reference solar-term boundaries (e.g., 立春) when determining year/month boundaries."
                 )
 
-            # Bottom: privacy and navigation
+            # Privacy + back link
             st.markdown("---")
-            st.markdown("<strong>This calculator does not log or store any personal information.</strong>", unsafe_allow_html=True)
-            st.caption("© 2025 Whispers of YI — Code under MIT, Guides under CC BY-NC-ND 4.0")
+            st.caption("This calculator does not store or log personal information.")
+            st.markdown("[Back to Whispers of YI](https://whispersofyi.github.io/)")
 
         except Exception as e:
             st.error(f"An error occurred during calculation: {e}")
-            st.write("Please check your input and try again.")
 else:
-    # Home / instructional view
+    # Home / instructions view
     st.markdown("## How to use")
-    st.write("Enter your birth date and exact time in the sidebar, choose the GMT offset for the birth location (include half-hour offsets where relevant), optionally enable precise longitude, then click 'Calculate Day Master'.")
+    st.write("Enter your exact birth date and time in the sidebar, select the GMT offset for the birth location, optionally enable precise longitude for improved accuracy, then click 'Calculate Day Master'.")
     st.write("")
     st.markdown("**What you'll get:**")
     st.markdown(
-        "- Solar-time conversion (longitude + Equation of Time)\n"
-        "- Four Pillars overview based on apparent solar time\n"
-        "- Day Master personality analysis and technical diagnostics"
+        "- Solar-time conversion using longitude and the Equation of Time\n"
+        "- Four Pillars overview based on solar time\n"
+        "- Day Master personality analysis\n"
+        "- Technical diagnostics showing corrections applied"
     )
-
-    st.markdown("## Solar-time accuracy — brief")
-    st.write("This calculator converts civil time into apparent solar time using longitude correction and the Equation of Time so the day-stem and hour pillar are aligned with the sun. If you require ultimate professional precision, add solar-term boundaries (e.g. 立春) — those are outside the scope of this simple tool.")
-    st.markdown("---")
+    st.markdown("## Solar Time Accuracy")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("**Longitude Correction**")
+        st.write("Adjusts for distance from timezone meridian; can range widely depending on location.")
+    with col2:
+        st.markdown("**Equation of Time**")
+        st.write("Corrects for orbital/axial effects; ranges roughly from -14 to +16 minutes across the year.")
+    st.info("Why it matters: these corrections can shift your hour pillar — and in edge cases your day pillar — compared with calculations using clock time alone.")
+    st.caption("This calculator does not store or log personal information.")
     st.caption("© 2025 Whispers of YI — Code under MIT, Guides under CC BY-NC-ND 4.0")
