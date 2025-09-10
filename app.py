@@ -353,9 +353,63 @@ DAY_MASTER_DATA = {
 }
 
 # ----------------------
+# Solar Time Calculation Functions
+# ----------------------
+def day_of_year(year, month, day):
+    """Calculate day of year (1-365/366)"""
+    date = datetime.date(year, month, day)
+    return date.timetuple().tm_yday
+
+def equation_of_time(day_of_year):
+    """
+    Calculate Equation of Time using NOAA formula.
+    Returns correction in minutes to convert mean solar time to apparent solar time.
+    Accuracy: ±30 seconds for most purposes.
+    """
+    B = 2 * math.pi * (day_of_year - 81) / 364
+    eot = 9.87 * math.sin(2 * B) - 7.53 * math.cos(B) - 1.5 * math.sin(B)
+    return eot
+
+def longitude_correction(longitude, timezone_offset):
+    """
+    Calculate longitude correction in minutes.
+    longitude: degrees (positive = East, negative = West)
+    timezone_offset: hours from UTC (e.g., +8 for GMT+8)
+    """
+    # Standard timezone meridians are at 15° intervals from Greenwich
+    tz_meridian = timezone_offset * 15
+    correction_minutes = (longitude - tz_meridian) / 15 * 60
+    return correction_minutes
+
+def civil_to_apparent_solar(dt_civil, longitude, timezone_offset):
+    """
+    Convert civil datetime to apparent solar time for BaZi calculations.
+    
+    Args:
+        dt_civil: datetime object in local civil time
+        longitude: longitude in degrees (positive = East, negative = West)
+        timezone_offset: timezone offset from UTC in hours
+    
+    Returns:
+        datetime object in apparent solar time
+    """
+    # Calculate corrections
+    doy = day_of_year(dt_civil.year, dt_civil.month, dt_civil.day)
+    eot = equation_of_time(doy)
+    long_corr = longitude_correction(longitude, timezone_offset)
+    
+    # Total correction in minutes
+    total_correction = long_corr + eot
+    
+    # Apply correction
+    dt_solar = dt_civil + datetime.timedelta(minutes=total_correction)
+    
+    return dt_solar, long_corr, eot
+
+# ----------------------
 # Validate input
 # ----------------------
-def validate_input(year, month, day, hour, minute):
+def validate_input(year, month, day, hour, minute, longitude):
     """Validate user input and return error message if invalid"""
     current_year = datetime.datetime.now().year
 
@@ -377,6 +431,9 @@ def validate_input(year, month, day, hour, minute):
 
     if not (0 <= minute <= 59):
         return "Minute must be between 0 and 59"
+    
+    if not (-180 <= longitude <= 180):
+        return "Longitude must be between -180 and 180 degrees"
 
     return None
 
@@ -409,29 +466,35 @@ def julian_day_number_at_noon(jd):
 HEAVENLY_STEMS = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
 EARTHLY_BRANCHES = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"]
 
-def calculate_day_master_from_utc(dt_utc):
-    jd = gregorian_to_julian_date(dt_utc.year, dt_utc.month, dt_utc.day, dt_utc.hour, dt_utc.minute, dt_utc.second)
+def calculate_day_master_from_solar(dt_solar):
+    """Calculate day master using solar time (more accurate for BaZi)"""
+    jd = gregorian_to_julian_date(dt_solar.year, dt_solar.month, dt_solar.day, dt_solar.hour, dt_solar.minute, dt_solar.second)
     jd_noon = julian_day_number_at_noon(jd)
     stem_idx = ((jd_noon - 1) % 10)
     branch_idx = ((jd_noon + 1) % 12)
     return HEAVENLY_STEMS[stem_idx], EARTHLY_BRANCHES[branch_idx], jd, jd_noon
 
-def create_four_pillars_from_utc(dt_utc):
-    # Year pillar (approx)
-    year_num = dt_utc.year
+def create_four_pillars_from_solar(dt_solar):
+    """Create complete four pillars from solar time"""
+    # Year pillar (simplified - for full accuracy would need Li Chun boundaries)
+    year_num = dt_solar.year
     sexagenary_year_index = (year_num - 3) % 60
     year_stem = HEAVENLY_STEMS[sexagenary_year_index % 10]
     year_branch = EARTHLY_BRANCHES[sexagenary_year_index % 12]
-    # Month pillar (simplified)
-    month_branch = EARTHLY_BRANCHES[(dt_utc.month - 1) % 12]
-    month_stem_index = (HEAVENLY_STEMS.index(year_stem) + 2 + (dt_utc.month - 1)) % 10
+    
+    # Month pillar (simplified - for full accuracy would need solar term boundaries)
+    month_branch = EARTHLY_BRANCHES[(dt_solar.month - 1) % 12]
+    month_stem_index = (HEAVENLY_STEMS.index(year_stem) + 2 + (dt_solar.month - 1)) % 10
     month_stem = HEAVENLY_STEMS[month_stem_index]
-    # Day pillar (JD-based)
-    day_stem, day_branch, jd, jd_noon = calculate_day_master_from_utc(dt_utc)
-    # Hour pillar
-    hour_slot = (dt_utc.hour + 1) // 2
+    
+    # Day pillar (accurate with Julian date calculation)
+    day_stem, day_branch, jd, jd_noon = calculate_day_master_from_solar(dt_solar)
+    
+    # Hour pillar (accurate for solar time)
+    hour_slot = (dt_solar.hour + 1) // 2
     hour_branch = EARTHLY_BRANCHES[hour_slot % 12]
     hour_stem = HEAVENLY_STEMS[(HEAVENLY_STEMS.index(day_stem) + hour_slot) % 10]
+    
     return {
         "year": f"{year_stem}{year_branch}",
         "month": f"{month_stem}{month_branch}",
@@ -443,18 +506,49 @@ def create_four_pillars_from_utc(dt_utc):
     }
 
 def parse_gmt_offset(tz_str):
+    """Parse GMT offset from string like 'GMT+8' or 'GMT-5'"""
     try:
         if tz_str.startswith("GMT"):
-            return int(tz_str[3:])
+            offset_str = tz_str[3:]
+            if offset_str:
+                return int(offset_str)
+            else:
+                return 0
     except:
         pass
     return 0
+
+# ----------------------
+# Common longitude coordinates for major cities
+# ----------------------
+MAJOR_CITIES = {
+    "New York, USA": -74.006,
+    "Los Angeles, USA": -118.2437,
+    "London, UK": -0.1276,
+    "Paris, France": 2.3522,
+    "Tokyo, Japan": 139.6917,
+    "Beijing, China": 116.4074,
+    "Shanghai, China": 121.4737,
+    "Hong Kong": 114.1694,
+    "Singapore": 103.8198,
+    "Sydney, Australia": 151.2093,
+    "Mumbai, India": 72.8777,
+    "Dubai, UAE": 55.2708,
+    "Moscow, Russia": 37.6173,
+    "Kuala Lumpur, Malaysia": 101.6869,
+    "Bangkok, Thailand": 100.5018,
+    "Seoul, South Korea": 126.9780,
+    "Manila, Philippines": 120.9842,
+    "Jakarta, Indonesia": 106.8650,
+    "Custom Location": None
+}
 
 # ----------------------
 # UI - Stable native Streamlit
 # ----------------------
 st.title("Day Master Calculator")
 st.caption("A quiet voice in the scrollstorm — discover your elemental nature through the ancient wisdom of BaZi")
+st.info("✨ **Enhanced with Solar Time Accuracy** — Now includes longitude correction and Equation of Time for precise BaZi calculations")
 
 # Sidebar form
 with st.sidebar:
@@ -464,15 +558,45 @@ with st.sidebar:
         birth_year = st.number_input("Birth Year", min_value=1900, max_value=current_year, value=1990)
         birth_month = st.number_input("Birth Month", min_value=1, max_value=12, value=1)
         birth_day = st.number_input("Birth Day", min_value=1, max_value=31, value=1)
+        
         col1, col2 = st.columns(2)
         with col1:
             birth_hour = st.number_input("Hour (0-23)", min_value=0, max_value=23, value=12)
         with col2:
             birth_minute = st.number_input("Minute (0-59)", min_value=0, max_value=59, value=0)
+        
+        # Timezone selection
         timezone_options = [f"GMT{'+' if i >= 0 else ''}{i}" for i in range(-12, 13)]
-        default_index = timezone_options.index("GMT+8") if "GMT+8" in timezone_options else 0
-        selected_timezone = st.selectbox("Time Zone", timezone_options, index=default_index)
+        default_tz_index = timezone_options.index("GMT+8") if "GMT+8" in timezone_options else 0
+        selected_timezone = st.selectbox("Time Zone", timezone_options, index=default_tz_index)
+        
+        # Location selection
+        st.subheader("Birth Location")
+        city_choice = st.selectbox("Select City (for longitude)", list(MAJOR_CITIES.keys()), 
+                                 index=list(MAJOR_CITIES.keys()).index("Kuala Lumpur, Malaysia"))
+        
+        if city_choice == "Custom Location":
+            longitude = st.number_input("Longitude (degrees)", min_value=-180.0, max_value=180.0, value=0.0, 
+                                      help="Positive = East, Negative = West")
+        else:
+            longitude = MAJOR_CITIES[city_choice]
+            if longitude is not None:
+                st.info(f"Longitude: {longitude}°")
+        
         submit_button = st.form_submit_button("Calculate Day Master")
+
+    # Information about solar time
+    with st.expander("ℹ️ About Solar Time Correction"):
+        st.write("""
+        **Why Solar Time Matters for BaZi:**
+        
+        Traditional BaZi uses "apparent solar time" rather than civil clock time. This calculator applies two corrections:
+        
+        1. **Longitude Correction**: Adjusts for your location's difference from the timezone meridian
+        2. **Equation of Time**: Corrects for Earth's orbital variations (±16 minutes throughout the year)
+        
+        These corrections can shift your calculated day master or hour pillar, providing more accurate results for serious BaZi analysis.
+        """)
 
     # Stable sidebar return link (always visible)
     st.markdown("---")
@@ -480,101 +604,149 @@ with st.sidebar:
 
 # Main content
 if submit_button:
-    error_message = validate_input(birth_year, birth_month, birth_day, birth_hour, birth_minute)
-    if error_message:
-        st.error(error_message)
+    if city_choice == "Custom Location" and longitude is None:
+        st.error("Please enter a longitude value for custom location")
     else:
-        try:
-            local_dt = datetime.datetime(birth_year, birth_month, birth_day, birth_hour, birth_minute, 0)
-            tz_offset = parse_gmt_offset(selected_timezone)
-            dt_utc = local_dt - datetime.timedelta(hours=tz_offset)
+        error_message = validate_input(birth_year, birth_month, birth_day, birth_hour, birth_minute, longitude)
+        if error_message:
+            st.error(error_message)
+        else:
+            try:
+                # Create civil time datetime
+                civil_dt = datetime.datetime(birth_year, birth_month, birth_day, birth_hour, birth_minute, 0)
+                tz_offset = parse_gmt_offset(selected_timezone)
+                
+                # Convert to apparent solar time
+                solar_dt, long_corr, eot = civil_to_apparent_solar(civil_dt, longitude, tz_offset)
+                
+                # Calculate four pillars using solar time
+                pillars = create_four_pillars_from_solar(solar_dt)
+                day_master_key = pillars["day_master"]
+                day_master_info = DAY_MASTER_DATA.get(day_master_key)
 
-            pillars = create_four_pillars_from_utc(dt_utc)
-            day_master_key = pillars["day_master"]
-            day_master_info = DAY_MASTER_DATA.get(day_master_key)
+                st.success("Day Master calculated successfully with solar time accuracy")
 
-            st.success("Day Master calculated successfully")
+                # Display corrections applied
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Longitude Correction", f"{long_corr:+.1f} min")
+                with col2:
+                    st.metric("Equation of Time", f"{eot:+.1f} min")
+                with col3:
+                    st.metric("Total Correction", f"{long_corr + eot:+.1f} min")
 
-            # Four pillars display
-            c1, c2, c3, c4 = st.columns(4)
-            c1.subheader("Year Pillar")
-            c1.markdown(f"**{pillars['year']}**")
-            c1.caption("Ancestry & Foundation")
-            c2.subheader("Month Pillar")
-            c2.markdown(f"**{pillars['month']}**")
-            c2.caption("Career & Relationships")
-            c3.subheader("Day Pillar")
-            c3.markdown(f"**{pillars['day']}**")
-            c3.caption("Self & Spouse")
-            c4.subheader("Hour Pillar")
-            c4.markdown(f"**{pillars['hour']}**")
-            c4.caption("Children & Legacy")
+                if abs(long_corr + eot) > 30:
+                    st.warning("⚠️ Large time correction applied - this may affect your hour pillar or even day pillar")
+                elif abs(long_corr + eot) > 15:
+                    st.info("ℹ️ Moderate time correction applied - results are more accurate for BaZi analysis")
 
-            st.markdown("---")
-
-            # Day Master analysis
-            if day_master_info:
-                st.header(f"{day_master_info['name']} — {day_master_key} ({day_master_info['element']})")
-                st.write(day_master_info["description"])
-
-                st.subheader("Natural Strengths & Positive Traits")
-                for t in day_master_info["positive_traits"]:
-                    st.markdown(f"- {t}")
-
-                st.subheader("Growth Areas & Potential Challenges")
-                for t in day_master_info["challenges"]:
-                    st.markdown(f"- {t}")
-
-                st.subheader("Elemental Harmony & Compatibility")
-                st.write(day_master_info["compatibility"])
-
-                st.subheader("Career Paths & Life Direction")
-                st.write(day_master_info["career_paths"])
-
-                st.subheader("Life Philosophy & Core Values")
-                st.write(day_master_info["life_philosophy"])
-            else:
-                st.error("Day Master data unavailable for computed stem.")
-
-            # Technical expander
-            with st.expander("Birth Details & Technical Information"):
-                st.write(f"**Complete Birth Information:**")
-                st.write(f"Date: {local_dt.strftime('%B %d, %Y')}")
-                st.write(f"Time: {local_dt.strftime('%H:%M')} ({selected_timezone})")
-                st.write(f"**Converted to UTC for calculation:** {dt_utc.strftime('%Y-%m-%d %H:%M')} (UTC)")
-                st.write("")
-                st.write("**Four Pillars (simplified / approximate):**")
-                st.write(f"- Year: {pillars['year']}")
-                st.write(f"- Month: {pillars['month']}")
-                st.write(f"- Day: {pillars['day']}")
-                st.write(f"- Hour: {pillars['hour']}")
-                st.write("")
-                st.write("**Julian info used for Day Stem calculation:**")
-                st.write(f"- JD (fractional): {pillars['jd']:.6f}")
-                st.write(f"- JD noon integer: {pillars['jd_noon']}")
                 st.markdown("---")
-                st.info(
-                    "Note: This tool improves day-stem accuracy by using Julian-Day-based calculations and UTC. "
-                    "For full professional BaZi accuracy you'd convert to local apparent solar time (longitude) and apply solar-term boundaries (立春, etc.)."
-                )
 
-            # Bottom return link (visible when sidebar is collapsed on mobile)
-            st.markdown("---")
-            st.markdown("[← Back to Whispers of YI](https://whispersofyi.github.io/)")
+                # Four pillars display
+                c1, c2, c3, c4 = st.columns(4)
+                c1.subheader("Year Pillar")
+                c1.markdown(f"**{pillars['year']}**")
+                c1.caption("Ancestry & Foundation")
+                c2.subheader("Month Pillar")
+                c2.markdown(f"**{pillars['month']}**")
+                c2.caption("Career & Relationships")
+                c3.subheader("Day Pillar")
+                c3.markdown(f"**{pillars['day']}**")
+                c3.caption("Self & Spouse")
+                c4.subheader("Hour Pillar")
+                c4.markdown(f"**{pillars['hour']}**")
+                c4.caption("Children & Legacy")
 
-        except Exception as e:
-            st.error(f"An error occurred during calculation: {e}")
+                st.markdown("---")
+
+                # Day Master analysis
+                if day_master_info:
+                    st.header(f"{day_master_info['name']} — {day_master_key} ({day_master_info['element']})")
+                    st.write(day_master_info["description"])
+
+                    st.subheader("Natural Strengths & Positive Traits")
+                    for t in day_master_info["positive_traits"]:
+                        st.markdown(f"- {t}")
+
+                    st.subheader("Growth Areas & Potential Challenges")
+                    for t in day_master_info["challenges"]:
+                        st.markdown(f"- {t}")
+
+                    st.subheader("Elemental Harmony & Compatibility")
+                    st.write(day_master_info["compatibility"])
+
+                    st.subheader("Career Paths & Life Direction")
+                    st.write(day_master_info["career_paths"])
+
+                    st.subheader("Life Philosophy & Core Values")
+                    st.write(day_master_info["life_philosophy"])
+                else:
+                    st.error("Day Master data unavailable for computed stem.")
+
+                # Technical expander
+                with st.expander("Birth Details & Technical Information"):
+                    st.write(f"**Birth Location:** {city_choice}")
+                    if longitude is not None:
+                        st.write(f"**Longitude:** {longitude}° {'E' if longitude > 0 else 'W' if longitude < 0 else ''}")
+                    st.write("")
+                    st.write(f"**Civil Time (Clock Time):** {civil_dt.strftime('%B %d, %Y at %H:%M')} ({selected_timezone})")
+                    st.write(f"**Apparent Solar Time:** {solar_dt.strftime('%B %d, %Y at %H:%M:%S')}")
+                    st.write("")
+                    st.write("**Solar Time Corrections Applied:**")
+                    st.write(f"- Longitude correction: {long_corr:+.2f} minutes")
+                    st.write(f"- Equation of Time: {eot:+.2f} minutes")
+                    st.write(f"- Total correction: {long_corr + eot:+.2f} minutes")
+                    st.write("")
+                    st.write("**Four Pillars (based on solar time):**")
+                    st.write(f"- Year: {pillars['year']}")
+                    st.write(f"- Month: {pillars['month']}")
+                    st.write(f"- Day: {pillars['day']}")
+                    st.write(f"- Hour: {pillars['hour']}")
+                    st.write("")
+                    st.write("**Julian Date Information:**")
+                    st.write(f"- JD (fractional): {pillars['jd']:.6f}")
+                    st.write(f"- JD noon integer: {pillars['jd_noon']}")
+                    st.markdown("---")
+                    st.info(
+                        "**About Solar Time Accuracy:** This calculator now converts civil time to apparent solar time using "
+                        "longitude correction and the Equation of Time. This provides significantly more accurate BaZi calculations "
+                        "compared to using clock time directly. For ultimate precision, additional corrections for solar terms "
+                        "(like 立春 for year boundaries) could be applied, but solar time correction addresses the most significant "
+                        "source of error in traditional BaZi calculations."
+                    )
+
+                # Bottom return link (visible when sidebar is collapsed on mobile)
+                st.markdown("---")
+                st.markdown("[← Back to Whispers of YI](https://whispersofyi.github.io/)")
+
+            except Exception as e:
+                st.error(f"An error occurred during calculation: {e}")
+                st.write("Please check your input values and try again.")
 
 else:
     # Instructional home view
     st.markdown("## How to use")
-    st.write("Enter your exact birth date and time (including minutes) in the sidebar, select the GMT offset for the birth location, then click 'Calculate Day Master'.")
+    st.write("Enter your exact birth date, time, and location in the sidebar, then click 'Calculate Day Master'.")
     st.write("")
-    st.write("What you'll get:")
+    st.markdown("**What you'll get:**")
     st.markdown(
-        "- A Four Pillars (simplified) overview\n"
-        "- The Day Master (Heavenly Stem of the day) with an in-depth personality/trait breakdown\n"
-        "- Technical Julian-date diagnostics in the expander"
+        "- Solar time conversion with longitude and Equation of Time corrections\n"
+        "- Four Pillars overview based on accurate solar time\n"
+        "- Detailed Day Master personality analysis\n"
+        "- Technical information showing all corrections applied"
     )
-    st.info("The moment you were born is unique — this calculator honors it exactly.")
+    
+    st.markdown("## Solar Time Accuracy")
+    st.write("Unlike basic calculators that use clock time, this tool converts to **apparent solar time** - the time system traditionally used in Chinese metaphysics. This correction can be significant:")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("**Longitude Correction**")
+        st.write("Adjusts for distance from timezone meridian. Can be ±60+ minutes depending on location.")
+    with col2:
+        st.markdown("**Equation of Time**")
+        st.write("Corrects for Earth's orbital variations. Ranges from +16 to -14 minutes throughout the year.")
+    
+    st.info("💡 **Why it matters:** These corrections can shift your hour pillar or even day pillar, potentially changing your Day Master entirely. The moment you were born deserves the most accurate calculation possible.")
+    
     st.caption("&copy; 2025 Whispers of YI — Code under MIT, Guides under CC BY-NC-ND 4.0")
