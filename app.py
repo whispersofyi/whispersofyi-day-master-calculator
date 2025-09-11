@@ -499,13 +499,13 @@ tz_options = [format_tz_label(o) for o in tz_offsets]
 # ----------------------
 st.title("Day Master Calculator")
 st.caption("A quiet voice in the scrollstorm — discover your elemental nature through the ancient wisdom of BaZi")
-st.info("This calculator uses longitude correction and the Equation of Time to ensure precise Day Master calculations.")
 
 # Sidebar: longitude toggle outside form for immediate show/hide
 with st.sidebar:
     st.header("Birth Information")
-    use_longitude = st.checkbox("Enable precise longitude (optional)", value=False)
-    st.markdown("Latitude is not required for BaZi solar-time correction. Enter longitude in decimal degrees (e.g., Hong Kong = 114.1694 for East; London = -0.1276 for West).")
+    use_longitude = st.checkbox("Enable longitude correction for maximum precision", value=False)
+    if use_longitude:
+        st.markdown("Enter your longitude in decimal degrees (e.g., Hong Kong = 114.1694°E, London = -0.1276°W) for the most accurate solar time conversion.")
 
     with st.form("birth_form"):
         current_year = datetime.datetime.now().year
@@ -558,19 +558,6 @@ if submit_button:
 
             st.success("Day Master calculated successfully (solar time applied)")
 
-            # Corrections centered
-            c1, c2, c3 = st.columns(3)
-            c1.markdown(f"<div style='text-align:center;'><strong>Longitude Correction</strong><br>{long_corr:+.1f} min</div>", unsafe_allow_html=True)
-            c2.markdown(f"<div style='text-align:center;'><strong>Equation of Time</strong><br>{eot:+.1f} min</div>", unsafe_allow_html=True)
-            c3.markdown(f"<div style='text-align:center;'><strong>Total Correction</strong><br>{(long_corr + eot):+.1f} min</div>", unsafe_allow_html=True)
-
-            # Gentle notices about scale of correction
-            total_corr = abs(long_corr + eot)
-            if total_corr > 30:
-                st.warning("Large time correction applied — results may differ significantly from clock-time calculations.")
-            elif total_corr > 15:
-                st.info("Moderate time correction applied — this improves accuracy for BaZi analysis.")
-
             st.markdown("---")
 
             # Pillars horizontal: enlarge Chinese characters
@@ -589,7 +576,7 @@ if submit_button:
 
             # Day Master analysis
             if day_master_info:
-                st.header(f"{day_master_info['name']} — {day_master_key} ({day_master_info['element']})")
+                st.header(f"Your Day Master is {day_master_info['name']} — {day_master_key} ({day_master_info['element']})")
                 st.write(day_master_info["description"])
 
                 st.subheader("Natural Strengths & Positive Traits")
@@ -625,6 +612,14 @@ if submit_button:
                 st.write(f"- Longitude correction: {long_corr:+.2f} minutes")
                 st.write(f"- Equation of Time: {eot:+.2f} minutes")
                 st.write(f"- Total correction: {(long_corr + eot):+.2f} minutes")
+                
+                # Gentle notices about scale of correction
+                total_corr = abs(long_corr + eot)
+                if total_corr > 30:
+                    st.write("- **Note:** Large time correction applied — results may differ significantly from clock-time calculations.")
+                elif total_corr > 15:
+                    st.write("- **Note:** Moderate time correction applied — this improves accuracy for BaZi analysis.")
+                
                 st.write("")
                 st.write("**Four Pillars (based on solar time):**")
                 st.write(f"- Year: {pillars['year']}")
@@ -665,14 +660,16 @@ else:
         "- Day Master personality analysis\n"
         "- Technical diagnostics showing corrections applied"
     )
+    
     st.markdown("## Solar Time Accuracy")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("**Longitude Correction**")
-        st.write("Adjusts for distance from timezone meridian; can range widely depending on location.")
-    with col2:
-        st.markdown("**Equation of Time**")
-        st.write("Corrects for orbital/axial effects; ranges roughly from -14 to +16 minutes across the year.")
-    st.info("Why it matters: these corrections can shift your hour pillar — and in edge cases your day pillar — compared with calculations using clock time alone.")
+    
+    st.markdown("**Longitude Correction**")
+    st.write("Adjusts for your distance from your timezone's central meridian. This can range from minutes to over an hour depending on your location within the timezone.")
+    
+    st.markdown("**Equation of Time**")
+    st.write("Corrects for Earth's elliptical orbit and axial tilt, which causes the sun to run fast or slow throughout the year. This seasonal variation ranges from -14 to +16 minutes.")
+    
+    st.markdown("**Why precision matters:** These corrections can shift your Hour Pillar and, in edge cases, your Day Master compared to clock-time-only calculators. Most online BaZi tools ignore these astronomical realities, potentially giving you incorrect results.")
+    
     st.caption("This calculator does not store or log personal information.")
     st.caption("© 2025 Whispers of YI — Code under MIT, Guides under CC BY-NC-ND 4.0")
